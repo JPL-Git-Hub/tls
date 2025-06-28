@@ -1,0 +1,15 @@
+node_modules
+.next
+.env*
+dist
+build
+coverage
+*.log
+package-lock.json
+.git
+.gitignore
+public
+README.md
+tsconfig.json
+next.config.js
+tailwind.config.js
