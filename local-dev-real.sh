@@ -11,6 +11,10 @@ echo "🔧 Killing ngrok processes..."
 pkill -f "ngrok" 2>/dev/null || true
 sleep 2
 
+echo "🔥 Killing Firebase emulator processes..."
+# Kill Firebase emulator processes silently
+pkill -f "firebase emulators" 2>/dev/null || true
+
 echo "🗑️  Clearing Next.js cache..."
 # Remove Next.js cache directory
 rm -rf .next 2>/dev/null || true
