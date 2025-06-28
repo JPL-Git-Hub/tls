@@ -1,9 +1,9 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /clients/{document} {
-      allow create: if true;
-      allow read, update, delete: if request.auth != null;
+    // Allow read/write access for authenticated users during development
+    match /{document=**} {
+      allow read, write: if request.auth != null;
     }
   }
 }
