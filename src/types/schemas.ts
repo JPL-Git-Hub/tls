@@ -18,32 +18,42 @@ export type ClientRole = 'primary' | 'co-buyer';
 export type StripeEventType = 'payment_intent.succeeded' | 'invoice.paid' | 'subscription.updated';
 export type CalEventType = 'booking.created' | 'booking.cancelled' | 'booking.rescheduled';
 
-// Embedded Client Schema
-export interface EmbeddedClient {
+// Client Data Schema (attorney management, billing data)
+export interface ClientData {
   clientId: string;
   firstName: string;
   lastName: string;
   email: string;
   mobilePhone: string;
-  role: ClientRole;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
 }
 
 // Portal Data Schema (portalUuid as primary key)
 export interface PortalData {
   portalUuid: string;
-  caseId: string;
+  clientId: string;
   portalStatus: PortalStatus;
   registrationStatus: RegistrationStatus;
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }
 
-// Case Data Schema with embedded clients array
+// Case Data Schema (legal matter tracking)
 export interface CaseData {
   caseId: string;
   caseType: CaseType;
   caseStatus: CaseStatus;
-  clients: EmbeddedClient[];
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}
+
+// Client Cases Junction Schema (client-case many-to-many relationships)
+export interface ClientCases {
+  participantId: string;
+  clientId: string;
+  caseId: string;
+  role: ClientRole;
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }
@@ -78,9 +88,11 @@ export interface CalWebhookData {
 
 // Collection Names Constants
 export const COLLECTIONS = {
+  CLIENTS: 'clients',
   PORTALS: 'portals',
   CASES: 'cases', 
   DOCUMENTS: 'documents',
+  CLIENT_CASES: 'client_cases',
   STRIPE_WEBHOOKS: 'stripe_webhooks',
   CAL_WEBHOOKS: 'cal_webhooks'
 } as const;

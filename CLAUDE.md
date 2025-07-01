@@ -1,3 +1,5 @@
+NEVER ADD A DATA OBJECT WITHOUT MY PERMISSION.
+
 # CLAUDE.md - Development Guidelines for Claude Code
 
 ## Project Functionality and Scale
