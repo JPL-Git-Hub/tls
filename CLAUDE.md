@@ -1,18 +1,20 @@
 # CLAUDE.md - Development Guidelines for Claude Code
 
+## Project Functionality and Scale
+Single codebase, single domain (thelawshop.com).
+
+A public website built for:
+- lead generation (forms), 
+- scheduling consults (cal.com API booking), and 
+- client acquisition upon payment (Stripe API payment). 
+
+Also a private portal system built for case management for retained clients at a scale of 1,000 portals with a maximum of 10 concurrent users.
+
 ## Firebase Modular Architecture for Claude Code
 
 ### Import Pattern Requirements
 
-**Use direct SDK imports for maximum Claude Code context:**
-```typescript
-// ✅ Required pattern
-import { adminDb } from './firebase-admin'
-import { clientAuth } from './firebase-client'
-
-// ❌ Avoid abstractions  
-import { getFirestoreDb, getAuth } from './firebase-utils'
-```
+Use direct SDK imports (adminDb, clientAuth) rather than abstracted utilities (getFirestoreDb, getAuth).
 
 ### Server-Side vs Client-Side Separation
 
@@ -28,16 +30,13 @@ import { getFirestoreDb, getAuth } from './firebase-utils'
 - Used in React components and client-side logic
 - Authentication, real-time listeners, client queries
 
-**Security Boundary:** Never import admin credentials in client-side code. Never use client SDK for service account operations.
+**Security Boundary:** Maintain separation between admin credentials and client-side code.
 
-### Claude Code Prompt Patterns
-
-#### Reference specific modules in CC prompts:
-- Create authentication flow using signIn from auth.ts. Follow existing auth patterns in codebase.
-- Add case creation API using adminDb from admin.ts. Follow existing admin patterns in codebase.
+**Client data isolation**: Firebase Security Rules must enforce strict client-to-client data separation. Each client can only access their own case data; attorneys can access all cases via role-based permissions.
 
 ### Module Responsibilities
 
+Follow single responsibility per module pattern established in codebase.
 - **auth.ts**: Client authentication, session management
 - **firestore.ts**: Case data, client records, attorney queries  
 - **storage.ts**: Document uploads, file security, storage rules
@@ -45,21 +44,10 @@ import { getFirestoreDb, getAuth } from './firebase-utils'
 
 **Import Structure:** Clean unified imports via `index.ts` for streamlined Claude Code access to Firebase functionality.
 
-## Third-Party Integration Configuration
-
-### Planned Collections
-- `stripe_webhook_events` 
-- `cal_webhook_events`
-
-## Attorney Configuration
-
-### Hardcoded Attorney Authorization Pattern
-
-**Use environment-based attorney configuration**: TLS operates with 1-2 attorneys plus potential paralegal. Hardcode authorization lists rather than database-driven user management.
-
-**Skip Firestore for**: Attorney emails, static org config, system settings
-
-**Authentication flow**: Google Workspace OAuth → Domain verification → Email allowlist → Firebase Auth integration
+## Integration Boundaries
+**External APIs**: Cal.com booking, Stripe payments, Google Maps property display, pdf.js document viewing
+**File handling**: PDF upload/download with client-side viewing and signing capabilities  
+**Data relationships**: Many-to-many client-case relationships via junction collections
 
 ## Error Handling Strategy
 
@@ -67,7 +55,7 @@ import { getFirestoreDb, getAuth } from './firebase-utils'
 
 **All error handling follows this approach until production deployment:**
 
-- **Fail-fast configuration validation on startup**
+-  **Fail-fast configuration validation on startup**
 - **Complete debugging context required in all errors**
 - **Service boundary error wrapping**: All external service initializations (Firebase, Stripe, Cal.com) must wrap SDK calls with try-catch blocks that provide TLS-specific context, even after centralized validation passes. Runtime failures should specify: service name, operation attempted, likely causes, and next debugging steps
 - **Service-specific error handling for Firebase/Stripe/Cal.com**
@@ -75,86 +63,21 @@ import { getFirestoreDb, getAuth } from './firebase-utils'
 - **No graceful degradation - force immediate problem resolution**
 
 **Error handling coverage pattern:**
-```
-Centralized validation (config problems) → Rich TLS context
-+ Service boundary wrapping (runtime problems) → Rich TLS context
-= Complete coverage for Claude Code debugging efficiency
-```
+Centralized validation handles config problems, service boundary wrapping handles runtime problems.
+
+**Error format for AI debugging optimization:**
+Structure service boundary errors as JSON objects with error_code, message, service, operation, remediation, and context fields.
 
 ## Development Environment Strategy
 
 ### Live Services Development Only
-
-**Exclusive live Firebase + ngrok development approach:**
-
-- **No Firebase emulators**: Develop directly against live Firebase project (tls-unified)
-- **No local service mocking**: Use actual Stripe, Cal.com, and Firebase services during development
-- **ngrok tunnel integration**: External webhooks point to ngrok URL for local development testing
-- **Real service validation**: Catch integration issues early rather than discovering them at deployment
-
-**Configuration validation**: All environment validation should expect live service credentials, not emulator settings.
-
-**Rationale**: Eliminates emulator/production environment discrepancies that create deployment surprises. Legal services applications require reliable external service integration patterns that local mocking cannot accurately represent.
-
-**Claude Code guidance**: Never generate emulator configuration or local service mocking code. Always implement direct integration with live services using proper environment variable validation.
+Use live Firebase (tls-unified), Stripe, and Cal.com services with ngrok tunnels. No emulators or local mocking.
 
 ## Service Configuration Architecture
+All external service configs (Firebase, Stripe, Cal.com) validated in single centralized location. Service modules import shared validated config rather than implementing duplicate validation. Use `-config.ts` suffix for configuration files. No configuration frameworks - direct environment variable validation with fail-fast startup validation.
 
-### Centralized Configuration Validation
-
-**Single source of truth for all external service configurations:**
-
-- **Centralized validation**: All service configs (Firebase, Stripe, Cal.com) validated in single location
-- **Shared configuration foundation**: Firebase modules import validated config rather than implementing duplicate validation
-- **Fail-fast service validation**: Complete external service configuration verification at application startup
-- **Uniform error context**: Consistent debugging information across all service integration failures
-
-**Implementation patterns:**
-
-```typescript
-// src/lib/config/config-validator.ts
-export const validateServiceConfig = () => {
-  // Fail-fast validation with complete debugging context
-}
-
-// Service-specific configs
-// src/lib/config/firebase-config.ts
-// src/lib/config/stripe-config.ts
-// src/lib/config/cal-config.ts
-```
-
-**Configuration naming convention**: Use `-config.ts` suffix for all service configuration files.
-
-**Validation requirements**: 
-- TypeScript fail-fast validation on startup
-- Complete debugging context in error messages
-- No configuration frameworks - direct environment variable validation
-
-**Module responsibilities**: Service-specific modules (auth.ts, firestore.ts, storage.ts) focus on functionality, not configuration validation.
-
-**Claude Code guidance**: Reference shared configuration validation when implementing service integrations. Avoid duplicate validation logic across modules.
-
-## Document Storage Architecture
-
-### Flat Storage + Metadata Pattern
-
-**Use Firestore metadata for document workflows, not file path hierarchy:**
-- Storage: `{clientId}-{docType}.pdf` flat naming
-- Triggers: Query Firestore document metadata, not parse file paths
-- Workflows: Database-driven actions based on docType fields
-
-**Skip hierarchical folders**: `/contracts/`, `/correspondence/` create complexity without TLS benefits.
-
-## Project Context
-
-### TLS Business Model
-- Fixed-fee home closing legal services (0.3% of purchase price)
-- Scale: 1,000 client portals max, 10 concurrent users
-- Tech Stack: Next.js, TypeScript, Firebase, Tailwind CSS
-- Architecture: Single codebase, single domain (thelawshop.com)
-
-### Development Approach
-- Minimalism and simplicity focused
-- Pattern-first development (reference existing code patterns)
-- Single responsibility per module
-- Clean unified imports for better Claude Code context
+### Configuration Layer Pattern
+- Central validation in `/config/` directory with fail-fast startup validation
+- Service modules import shared validated config rather than duplicate validation
+- Service-specific functions focus exclusively on functionality (3-5 lines after centralization)
+- Use `-config.ts` suffix for configuration files
