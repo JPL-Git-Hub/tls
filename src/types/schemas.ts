@@ -42,8 +42,9 @@ export interface PortalData {
 // Case Data Schema (legal matter tracking)
 export interface CaseData {
   caseId: string;
+  clientId: string;
   caseType: CaseType;
-  caseStatus: CaseStatus;
+  status: CaseStatus;
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }
@@ -62,8 +63,10 @@ export interface ClientCases {
 export interface DocumentData {
   documentId: string;
   caseId: string;
-  documentType: DocumentType;
   fileName: string;
+  fileUrl: string;
+  docType: DocumentType;
+  uploadedAt: Timestamp;
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }
@@ -71,19 +74,19 @@ export interface DocumentData {
 // Stripe Webhook Data Schema (payment event storage)
 export interface StripeWebhookData {
   webhookId: string;
-  eventType: StripeEventType;
+  eventType: string;
   payload: Record<string, any>;
+  processedAt: Timestamp;
   createdAt: Timestamp;
-  updatedAt: Timestamp;
 }
 
 // Cal Webhook Data Schema (booking event storage)
 export interface CalWebhookData {
   bookingId: string;
-  eventType: CalEventType;
+  eventType: string;
   payload: Record<string, any>;
+  processedAt: Timestamp;
   createdAt: Timestamp;
-  updatedAt: Timestamp;
 }
 
 // Collection Names Constants

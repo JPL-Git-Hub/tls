@@ -2,7 +2,7 @@ import { initializeApp, getApps, getApp } from 'firebase/app'
 import { getAuth, connectAuthEmulator } from 'firebase/auth'
 import { getFirestore, connectFirestoreEmulator } from 'firebase/firestore'
 import { getStorage, connectStorageEmulator } from 'firebase/storage'
-import { firebaseClientConfig, useEmulator } from '@/lib/config/firebase-config'
+import { firebaseClientConfig, useEmulator } from '@/lib/config/firebase-client-config'
 
 // Initialize Firebase app with singleton pattern
 const firebaseApp = getApps().length === 0 
