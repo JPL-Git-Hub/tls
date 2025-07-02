@@ -105,6 +105,18 @@ Follow single responsibility per module pattern established in codebase.
 - **storage.ts**: Document uploads with case association. Must validate file types and sizes
 - **admin.ts**: Portal creation, user management. API routes only - never import in client components
 
+### TypeScript Interface Patterns
+
+**Never duplicate interfaces** across components and utilities - derive from existing schema types using utility types (`Omit`, `Pick`, `Partial`)
+- **Separate user input from database records** - form interfaces should omit system-generated fields (IDs, timestamps) from schema types
+- **Use schema-derived types** - `Omit<ClientData, 'clientId' | 'createdAt' | 'updatedAt'>` instead of duplicate interface definitions
+- **Form-to-schema alignment** - all form submissions must map cleanly to database schema without field mismatches
+
+**Pattern violations:**
+- Defining same interface in multiple files
+- Form interfaces including database-only fields
+- Manual interface creation when schema types exist
+
 
 ## Integration Boundaries
 **External APIs**: Cal.com booking, Stripe payments, Google Maps property display, pdf.js document viewing
@@ -174,6 +186,42 @@ All external service configs (Firebase, Stripe, Cal.com) validated in single cen
 - Service modules import shared validated config rather than duplicate validation
 - Service-specific functions focus exclusively on functionality (3-5 lines after centralization)
 - Use `-config.ts` suffix for configuration files
+
+## Incremental Implementation Approach
+
+### Single-Objective Implementation
+**Interpret all prompts as single-objective requests** and implement only the specific deliverable requested.
+
+**✅ Implementation patterns:**
+- **Single deliverable focus** - Complete one clear objective per response
+- **Build on existing foundation** - Reference and extend previously created components
+- **Follow established patterns** - Use existing codebase patterns and conventions
+- **Minimal scope changes** - Avoid expanding beyond the specific request
+
+**❌ Avoid over-implementation:**
+- Multiple objectives in single response
+- Comprehensive solutions beyond request scope
+- Implementing multiple architectural layers simultaneously
+- Front-loading enhancements not requested
+
+### Incremental Development Sequence
+**When complexity emerges, break into logical steps:**
+
+1. **Foundation**: Implement core requirement only
+2. **Function**: Add specific functionality to existing foundation
+3. **Integration**: Connect with existing systems
+4. **Enhancement**: Add requested improvements to working implementation
+
+### Implementation Control
+**Recognize when to limit scope:**
+- Task involves multiple architectural concerns - focus on primary objective
+- Multiple responsibilities emerge - address foundation first
+- Complete system implementation requested - deliver core functionality
+
+**Response approach:**
+- Deliver focused implementation
+- Note logical next steps for future prompts
+- Reference existing codebase patterns consistently
 
 ## Development Tooling Pattern
 **Prettier**: Configure for formatting without linting errors. Install as dev dependency with separate format scripts (`format`, `format:check`). Keep ESLint and Prettier as independent tools - no integration that blocks development.

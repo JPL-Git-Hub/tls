@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { adminDb, requireAttorneyAuth } from '@/lib/firebase/admin';
+import { adminDb } from '@/lib/firebase/admin';
 import { Timestamp } from 'firebase-admin/firestore';
 import { PortalData, PortalStatus, RegistrationStatus, COLLECTIONS } from '@/types/schemas';
 import { randomUUID } from 'crypto';
@@ -10,25 +10,6 @@ interface CreatePortalRequest {
 
 export async function POST(request: NextRequest) {
   try {
-    // Verify attorney authentication
-    const authHeader = request.headers.get('authorization');
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json(
-        { error: 'Missing or invalid authorization header' },
-        { status: 401 }
-      );
-    }
-
-    const idToken = authHeader.split('Bearer ')[1];
-    const attorney = await requireAttorneyAuth(idToken);
-    
-    if (!attorney) {
-      return NextResponse.json(
-        { error: 'Unauthorized: Attorney access required' },
-        { status: 403 }
-      );
-    }
-
     const body: CreatePortalRequest = await request.json();
 
     // Validate required fields

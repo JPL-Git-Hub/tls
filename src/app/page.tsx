@@ -17,7 +17,7 @@ export default function Home() {
 
         {/* Action Buttons */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 w-full">
-          <Link href="/form">
+          <Link href="/lead">
             <Button 
               size="lg" 
               className="h-16 text-lg w-full"
