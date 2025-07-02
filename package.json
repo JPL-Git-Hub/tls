@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "NODE_OPTIONS=\"--disable-warning=MODULE_TYPELESS_PACKAGE_JSON\" concurrently \"next dev\" \"ngrok start my-app\"",
+    "dev": "NODE_OPTIONS=\"--disable-warning=MODULE_TYPELESS_PACKAGE_JSON\" next dev",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",

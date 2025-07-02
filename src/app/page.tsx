@@ -1,6 +1,5 @@
-"use client"
-
 import { Button } from '@/components/ui/button'
+import Link from 'next/link'
 
 export default function Home() {
   return (
@@ -18,48 +17,63 @@ export default function Home() {
 
         {/* Action Buttons */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 w-full">
-          <Button 
-            size="lg" 
-            className="h-16 text-lg"
-            onClick={() => console.log('Fill out form')}
-          >
-            Fill Out Form
-          </Button>
+          <Link href="/form">
+            <Button 
+              size="lg" 
+              className="h-16 text-lg w-full"
+            >
+              Fill Out Form
+            </Button>
+          </Link>
           
-          <Button 
-            size="lg" 
-            variant="outline" 
-            className="h-16 text-lg"
-            onClick={() => console.log('Book a consult')}
-          >
-            Book a Consult
-          </Button>
+          <Link href="/consult">
+            <Button 
+              size="lg" 
+              variant="outline" 
+              className="h-16 text-lg w-full"
+            >
+              Book a Consult
+            </Button>
+          </Link>
           
-          <Button 
-            size="lg" 
-            variant="secondary" 
-            className="h-16 text-lg"
-            onClick={() => console.log('Make a payment')}
-          >
-            Make a Payment
-          </Button>
+          <Link href="/payment">
+            <Button 
+              size="lg" 
+              variant="secondary" 
+              className="h-16 text-lg w-full"
+            >
+              Make a Payment
+            </Button>
+          </Link>
           
-          <Button 
-            size="lg" 
-            variant="outline" 
-            className="h-16 text-lg"
-            onClick={() => console.log('Register for portal')}
-          >
-            Register for Portal
-          </Button>
+          <Link href="/portal/register">
+            <Button 
+              size="lg" 
+              variant="outline" 
+              className="h-16 text-lg w-full"
+            >
+              Register for Portal
+            </Button>
+          </Link>
           
-          <Button 
-            size="lg" 
-            className="h-16 text-lg md:col-span-2 lg:col-span-1"
-            onClick={() => console.log('Login for portal')}
-          >
-            Login for Portal
-          </Button>
+          <Link href="/portal/login">
+            <Button 
+              size="lg" 
+              className="h-16 text-lg md:col-span-2 lg:col-span-1 w-full"
+            >
+              Login for Portal
+            </Button>
+          </Link>
+
+          <Link href="/login">
+            <Button 
+              size="lg" 
+              variant="ghost" 
+              className="h-16 text-lg w-full"
+            >
+              Attorney Login
+            </Button>
+          </Link>
         </div>
       </main>
     </div>
