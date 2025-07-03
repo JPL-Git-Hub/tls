@@ -41,6 +41,19 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Fetch client data to get name
+    const clientDoc = await adminDb.collection(COLLECTIONS.CLIENTS).doc(clientId).get();
+    
+    if (!clientDoc.exists) {
+      return NextResponse.json(
+        { error: 'Client not found' },
+        { status: 404 }
+      );
+    }
+    
+    const clientData = clientDoc.data();
+    const clientName = `${clientData?.firstName} ${clientData?.lastName}`;
+
     // Generate portal UUID
     const portalUuid = randomUUID();
     
@@ -48,6 +61,7 @@ export async function POST(request: NextRequest) {
     const portalData: PortalData = {
       portalUuid,
       clientId,
+      clientName,
       portalStatus: 'created' as PortalStatus,
       registrationStatus: 'pending' as RegistrationStatus,
       createdAt: Timestamp.now(),

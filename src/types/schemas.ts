@@ -33,6 +33,7 @@ export interface ClientData {
 export interface PortalData {
   portalUuid: string;
   clientId: string;
+  clientName: string;
   portalStatus: PortalStatus;
   registrationStatus: RegistrationStatus;
   createdAt: Timestamp;
