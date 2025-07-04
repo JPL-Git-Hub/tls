@@ -17,17 +17,12 @@ export default function LoginPage() {
       const userCredential = await signInWithGoogle()
       const user = userCredential.user
       
-      // Check domain restriction
-      if (!user.email?.endsWith('@thelawshop.com')) {
-        console.error('Domain verification failed:', user.email)
-        return
-      }
+      // Check custom claims for attorney authorization
+      const idTokenResult = await user.getIdTokenResult()
+      const claims = idTokenResult.claims as { role?: string }
       
-      // Check authorized attorney list
-      const authorizedAttorneys = process.env.NEXT_PUBLIC_AUTHORIZED_ATTORNEYS?.split(',').map(email => email.trim()) || []
-      
-      if (!authorizedAttorneys.includes(user.email)) {
-        console.error('Attorney authorization failed:', user.email)
+      if (claims.role !== 'attorney') {
+        console.error('Attorney authorization failed - custom claims check:', user.email)
         return
       }
       

@@ -1,20 +1,23 @@
-import { addDoc, collection, Timestamp } from 'firebase/firestore'
-import { clientDb } from '@/lib/firebase/client'
-import { ClientData, COLLECTIONS } from '@/types/schemas'
+import { ClientData } from '@/types/schemas'
 
 export async function submitClientLead(data: Omit<ClientData, 'clientId' | 'createdAt' | 'updatedAt'>): Promise<string> {
   try {
-    const clientData: Omit<ClientData, 'clientId'> = {
-      firstName: data.firstName,
-      lastName: data.lastName,
-      email: data.email,
-      mobilePhone: data.mobilePhone,
-      createdAt: Timestamp.now(),
-      updatedAt: Timestamp.now()
+    // Use server-side API endpoint instead of direct Firebase client SDK
+    const response = await fetch('/api/clients/create', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data)
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Failed to create client');
     }
 
-    const docRef = await addDoc(collection(clientDb, COLLECTIONS.CLIENTS), clientData)
-    return docRef.id
+    const result = await response.json();
+    return result.clientId;
   } catch (error) {
     console.error('Client lead submission failed:', error)
     throw new Error('Failed to submit client information')

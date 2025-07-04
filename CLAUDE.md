@@ -7,6 +7,14 @@ NEVER ADD A DATA OBJECT WITHOUT MY PERMISSION.
 - **Authentication boundaries**: Maintain strict admin/client separation per auth flow patterns
 - **File structure**: Follow server/client module separation - no cross-contamination
 
+## Technical Debt Prevention
+- **Root cause resolution**: Fix import paths, environment loading, and module resolution - never duplicate code
+- **Single source of truth**: Use existing schemas, collections, and Firebase modules - never hardcode or recreate
+- **Reject shortcuts**: All code must import from established patterns or properly extend them
+- **Right tool for the job**: Use jq for JSON, yq for YAML, xmllint for XML, Firebase CLI for Firebase - service tools over REST hacks
+- **Schema field compliance**: Reference actual schema field names from schemas.ts, not assumed field names
+- **Error handling scope**: Declare variables outside try-catch blocks when error handlers need access for logging/context
+
 ## Project Functionality and Scale
 Single codebase, single domain (thelawshop.com).
 

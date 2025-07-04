@@ -32,6 +32,38 @@ export default function PortalRegisterPage() {
     try {
       const userCredential = await createUserWithEmailAndPassword(clientAuth, email, password)
       console.log('User created:', userCredential.user.uid)
+      
+      // Update portal registration status to completed
+      const response = await fetch('/api/portal/update-registration-status', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          portalUuid: uuid
+        })
+      });
+
+      if (!response.ok) {
+        console.error('Failed to update registration status');
+      }
+
+      // Set custom claims for the new client user
+      const claimsResponse = await fetch('/api/portal/set-client-claims', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          uid: userCredential.user.uid,
+          portalUuid: uuid
+        })
+      });
+
+      if (!claimsResponse.ok) {
+        console.error('Failed to set client claims');
+      }
+
       router.push(`/portal/${uuid}`)
     } catch (error) {
       console.error('Registration error:', error)

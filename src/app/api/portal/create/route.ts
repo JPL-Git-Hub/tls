@@ -1,14 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { adminDb, requireAttorneyAuth } from '@/lib/firebase/admin';
+import { requireAttorneyAuth } from '@/lib/firebase/admin';
+import { getClient, createPortal } from '@/lib/firebase/firestore';
 import { Timestamp } from 'firebase-admin/firestore';
 import { PortalData, PortalStatus, RegistrationStatus, COLLECTIONS } from '@/types/schemas';
 import { randomUUID } from 'crypto';
 
-interface CreatePortalRequest {
-  clientId: string;
-}
+type CreatePortalRequest = Pick<PortalData, 'clientId'>;
 
 export async function POST(request: NextRequest) {
+  let clientId: string | undefined;
+  let portalUuid: string | undefined;
+  
   try {
     // Verify attorney authentication
     const authHeader = request.headers.get('authorization');
@@ -32,7 +34,7 @@ export async function POST(request: NextRequest) {
     const body: CreatePortalRequest = await request.json();
 
     // Validate required fields
-    const { clientId } = body;
+    clientId = body.clientId;
     
     if (!clientId) {
       return NextResponse.json(
@@ -41,36 +43,32 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Fetch client data to get name
-    const clientDoc = await adminDb.collection(COLLECTIONS.CLIENTS).doc(clientId).get();
+    // Fetch client data using established firestore function
+    const clientData = await getClient(clientId);
     
-    if (!clientDoc.exists) {
+    if (!clientData) {
       return NextResponse.json(
         { error: 'Client not found' },
         { status: 404 }
       );
     }
     
-    const clientData = clientDoc.data();
-    const clientName = `${clientData?.firstName} ${clientData?.lastName}`;
+    const clientName = `${clientData.firstName} ${clientData.lastName}`;
 
     // Generate portal UUID
-    const portalUuid = randomUUID();
+    portalUuid = randomUUID();
     
     // Create portal data
-    const portalData: PortalData = {
+    const portalData = {
       portalUuid,
       clientId,
       clientName,
       portalStatus: 'created' as PortalStatus,
       registrationStatus: 'pending' as RegistrationStatus,
-      createdAt: Timestamp.now(),
-      updatedAt: Timestamp.now(),
     };
 
-    // Save to Firestore using portalUuid as document ID
-    const docRef = adminDb.collection(COLLECTIONS.PORTALS).doc(portalUuid);
-    await docRef.set(portalData);
+    // Create portal using established firestore function
+    await createPortal(portalData);
 
     return NextResponse.json({
       success: true,
@@ -79,9 +77,23 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Portal creation failed:', error);
+    console.error('Failed to create portal:', JSON.stringify({
+      error_code: 'PORTAL_CREATION_FAILED',
+      message: 'Failed to create portal for client',
+      service: 'Firebase Firestore',
+      operation: 'portal_creation',
+      context: { clientId, portalUuid },
+      remediation: 'Verify client exists and Firebase Admin SDK permissions',
+      original_error: error.message
+    }, null, 2));
+    
     return NextResponse.json(
-      { error: 'Failed to create portal' },
+      { 
+        error: 'Failed to create portal',
+        details: error.message,
+        clientId,
+        portalUuid
+      },
       { status: 500 }
     );
   }

@@ -3,18 +3,27 @@
 import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { DocumentUpload } from '@/components/ui/document-upload'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { onAuthStateChanged, signOut, User } from 'firebase/auth'
-import { clientAuth } from '@/lib/firebase/auth'
+import { clientAuth } from '@/lib/firebase/client'
+import { uploadDocument } from '@/lib/firebase/storage'
+import { CaseData } from '@/types/schemas'
+import { UserClaims } from '@/lib/firebase/custom-claims'
 
 export default function AdminPage() {
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [selectedCaseId, setSelectedCaseId] = useState<string>('')
+  const [isUploading, setIsUploading] = useState(false)
+  const [cases, setCases] = useState<CaseData[]>([])
+  const [casesLoading, setCasesLoading] = useState(true)
   const router = useRouter()
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(clientAuth, (user) => {
+    const unsubscribe = onAuthStateChanged(clientAuth, async (user) => {
       setUser(user)
       setIsLoading(false)
       
@@ -23,18 +32,18 @@ export default function AdminPage() {
         return
       }
 
-      // Check domain restriction
-      if (!user.email?.endsWith('@thelawshop.com')) {
-        console.error('Admin access denied - domain verification failed:', user.email)
-        router.push('/login')
-        return
-      }
-
-      // Check authorized attorney list
-      const authorizedAttorneys = process.env.NEXT_PUBLIC_AUTHORIZED_ATTORNEYS?.split(',').map(email => email.trim()) || []
-      
-      if (!authorizedAttorneys.includes(user.email)) {
-        console.error('Admin access denied - attorney authorization failed:', user.email)
+      try {
+        // Check custom claims for attorney authorization
+        const idTokenResult = await user.getIdTokenResult()
+        const claims = idTokenResult.claims as UserClaims
+        
+        if (claims.role !== 'attorney') {
+          console.error('Admin access denied - attorney claims not found:', user.email)
+          router.push('/login')
+          return
+        }
+      } catch (error) {
+        console.error('Failed to verify attorney claims:', error)
         router.push('/login')
         return
       }
@@ -42,6 +51,30 @@ export default function AdminPage() {
 
     return () => unsubscribe()
   }, [router])
+
+  // Fetch cases
+  useEffect(() => {
+    const fetchCases = async () => {
+      if (!user) return
+      
+      try {
+        const response = await fetch('/api/case/list')
+        const data = await response.json()
+        
+        if (data.success) {
+          setCases(data.cases)
+        } else {
+          console.error('Failed to fetch cases:', data.error)
+        }
+      } catch (error) {
+        console.error('Error fetching cases:', error)
+      } finally {
+        setCasesLoading(false)
+      }
+    }
+
+    fetchCases()
+  }, [user])
 
   // Show loading state while checking authentication
   if (isLoading) {
@@ -66,6 +99,19 @@ export default function AdminPage() {
       router.push('/login')
     } catch (error) {
       console.error('Sign out error:', error)
+    }
+  }
+
+  const handleDocumentUpload = async (file: File, caseId: string) => {
+    setIsUploading(true)
+    try {
+      const downloadURL = await uploadDocument(file, caseId)
+      console.log('Document uploaded:', downloadURL)
+      // TODO: Save document metadata to Firestore
+    } catch (error) {
+      console.error('Upload error:', error)
+    } finally {
+      setIsUploading(false)
     }
   }
 
@@ -108,6 +154,40 @@ export default function AdminPage() {
             </CardContent>
           </Card>
         </Link>
+
+        {/* Document Upload Section */}
+        <div className="w-full space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Select Case</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Select onValueChange={setSelectedCaseId} value={selectedCaseId} disabled={casesLoading}>
+                <SelectTrigger>
+                  <SelectValue placeholder={casesLoading ? "Loading cases..." : "Choose a case for document upload"} />
+                </SelectTrigger>
+                <SelectContent>
+                  {cases.map((caseData) => (
+                    <SelectItem key={caseData.caseId} value={caseData.caseId}>
+                      {caseData.caseType} - {caseData.status}
+                    </SelectItem>
+                  ))}
+                  {cases.length === 0 && !casesLoading && (
+                    <SelectItem value="no-cases" disabled>
+                      No cases found
+                    </SelectItem>
+                  )}
+                </SelectContent>
+              </Select>
+            </CardContent>
+          </Card>
+
+          <DocumentUpload
+            onUpload={handleDocumentUpload}
+            selectedCaseId={selectedCaseId}
+            isUploading={isUploading}
+          />
+        </div>
       </div>
     </div>
   )

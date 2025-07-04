@@ -2,8 +2,7 @@
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { User, onAuthStateChanged, signOut } from 'firebase/auth';
-import { clientAuth } from '@/lib/firebase/auth';
-import { isAuthorizedAttorney } from '@/lib/config/auth-config';
+import { clientAuth } from '@/lib/firebase/client';
 
 interface AuthContextType {
   user: User | null;
@@ -24,11 +23,19 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(clientAuth, (firebaseUser) => {
+    const unsubscribe = onAuthStateChanged(clientAuth, async (firebaseUser) => {
       setUser(firebaseUser);
       
-      if (firebaseUser?.email) {
-        setIsAttorney(isAuthorizedAttorney(firebaseUser.email));
+      if (firebaseUser) {
+        try {
+          // Use Firebase custom claims for authorization instead of server-side config
+          const idTokenResult = await firebaseUser.getIdTokenResult();
+          const claims = idTokenResult.claims as { role?: string };
+          setIsAttorney(claims.role === 'attorney');
+        } catch (error) {
+          console.error('Failed to get user claims:', error);
+          setIsAttorney(false);
+        }
       } else {
         setIsAttorney(false);
       }
