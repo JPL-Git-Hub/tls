@@ -5,6 +5,7 @@ import {
   useContext,
   useEffect,
   useState,
+  useMemo,
   ReactNode,
 } from 'react'
 import { User, onAuthStateChanged, signOut } from 'firebase/auth'
@@ -70,12 +71,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
     await signOut(clientAuth)
   }
 
-  const value: AuthContextType = {
-    user,
-    isAttorney,
-    isLoading,
-    signOut: handleSignOut,
-  }
+  const value: AuthContextType = useMemo(
+    () => ({
+      user,
+      isAttorney,
+      isLoading,
+      signOut: handleSignOut,
+    }),
+    [user, isAttorney, isLoading]
+  )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }

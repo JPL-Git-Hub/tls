@@ -121,7 +121,7 @@ export default function AdminPage() {
     try {
       const downloadURL = await uploadDocument(file, caseId)
       console.log('Document uploaded:', downloadURL)
-      // TODO: Save document metadata to Firestore
+      // TODO: Implement document metadata storage in Firestore (planned feature enhancement)
     } catch (error) {
       console.error('Upload error:', error)
     } finally {

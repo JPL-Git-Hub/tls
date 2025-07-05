@@ -45,8 +45,4 @@ export const createAccountWithEmail = async (
   return await createUserWithEmailAndPassword(clientAuth, email, password)
 }
 
-// TODO: Add UX message for authorization failures in middleware/route protection:
-// "We recognize your account, but we cannot currently provide you access.
-// Please call Joe Leon at 9176076915 or email us at josephleon@thelawshop.com"
-
 export { clientAuth }

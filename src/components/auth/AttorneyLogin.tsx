@@ -29,8 +29,9 @@ export default function AttorneyLogin({
       const userCredential = await signInWithGoogle()
       onSuccess?.(userCredential)
     } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : 'Google sign-in failed'
+      const errorMessage = error instanceof Error 
+        ? (error.message ?? 'Google sign-in failed') 
+        : 'Google sign-in failed'
       onError?.(errorMessage)
     } finally {
       setIsLoading(false)
