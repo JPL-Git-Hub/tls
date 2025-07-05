@@ -10,7 +10,7 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
-  // Client portal routes - basic auth check only  
+  // Client portal routes - basic auth check only
   if (pathname.startsWith('/portal')) {
     // Allow the page to handle authentication via AuthProvider
     return NextResponse.next()
@@ -20,5 +20,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/admin/:path*', '/portal/:path*']
+  matcher: ['/admin/:path*', '/portal/:path*'],
 }

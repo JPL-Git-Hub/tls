@@ -1,9 +1,15 @@
-"use client"
+'use client'
 
 import { useParams, useRouter } from 'next/navigation'
 import { signOut } from 'firebase/auth'
 import { clientAuth } from '@/lib/firebase/client'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 
 export default function PortalDashboardPage() {
@@ -35,22 +41,14 @@ export default function PortalDashboardPage() {
         <Card>
           <CardHeader>
             <CardTitle>Portal Information</CardTitle>
-            <CardDescription>
-              Your portal details
-            </CardDescription>
+            <CardDescription>Your portal details</CardDescription>
           </CardHeader>
           <CardContent>
-            <p className="text-sm text-muted-foreground">
-              Portal ID: {uuid}
-            </p>
+            <p className="text-sm text-muted-foreground">Portal ID: {uuid}</p>
           </CardContent>
         </Card>
 
-        <Button 
-          variant="outline" 
-          className="w-full"
-          onClick={handleSignOut}
-        >
+        <Button variant="outline" className="w-full" onClick={handleSignOut}>
           Sign Out
         </Button>
       </div>

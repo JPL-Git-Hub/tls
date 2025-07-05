@@ -1,4 +1,4 @@
-"use client"
+'use client'
 
 import { useState, useCallback } from 'react'
 import { useDropzone } from 'react-dropzone'
@@ -12,7 +12,11 @@ interface DocumentUploadProps {
   isUploading?: boolean
 }
 
-export function DocumentUpload({ onUpload, selectedCaseId, isUploading = false }: DocumentUploadProps) {
+export function DocumentUpload({
+  onUpload,
+  selectedCaseId,
+  isUploading = false,
+}: DocumentUploadProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
@@ -26,9 +30,10 @@ export function DocumentUpload({ onUpload, selectedCaseId, isUploading = false }
     accept: {
       'application/pdf': ['.pdf'],
       'application/msword': ['.doc'],
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx']
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
+        ['.docx'],
     },
-    maxFiles: 1
+    maxFiles: 1,
   })
 
   const handleUpload = async () => {

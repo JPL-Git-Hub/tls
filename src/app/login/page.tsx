@@ -1,8 +1,14 @@
-"use client"
+'use client'
 
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
 import { signInWithGoogle } from '@/lib/firebase/auth'
 import { useRouter } from 'next/navigation'
 
@@ -12,20 +18,23 @@ export default function LoginPage() {
 
   const handleGoogleSignIn = async () => {
     setIsLoading(true)
-    
+
     try {
       const userCredential = await signInWithGoogle()
       const user = userCredential.user
-      
+
       // Check custom claims for attorney authorization
       const idTokenResult = await user.getIdTokenResult()
       const claims = idTokenResult.claims as { role?: string }
-      
+
       if (claims.role !== 'attorney') {
-        console.error('Attorney authorization failed - custom claims check:', user.email)
+        console.error(
+          'Attorney authorization failed - custom claims check:',
+          user.email
+        )
         return
       }
-      
+
       router.push('/admin')
     } catch (error) {
       console.error('Login error:', error)

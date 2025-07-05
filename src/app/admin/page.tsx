@@ -1,17 +1,29 @@
-"use client"
+'use client'
 
 import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
 import { DocumentUpload } from '@/components/ui/document-upload'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { onAuthStateChanged, signOut, User } from 'firebase/auth'
 import { clientAuth } from '@/lib/firebase/client'
 import { uploadDocument } from '@/lib/firebase/storage'
 import { CaseData } from '@/types/schemas'
-import { UserClaims } from '@/lib/firebase/custom-claims'
+import { isAttorneyRole } from '@/lib/firebase/custom-claims'
 
 export default function AdminPage() {
   const [user, setUser] = useState<User | null>(null)
@@ -23,10 +35,10 @@ export default function AdminPage() {
   const router = useRouter()
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(clientAuth, async (user) => {
+    const unsubscribe = onAuthStateChanged(clientAuth, async user => {
       setUser(user)
       setIsLoading(false)
-      
+
       if (!user) {
         router.push('/login')
         return
@@ -35,10 +47,12 @@ export default function AdminPage() {
       try {
         // Check custom claims for attorney authorization
         const idTokenResult = await user.getIdTokenResult()
-        const claims = idTokenResult.claims as UserClaims
-        
-        if (claims.role !== 'attorney') {
-          console.error('Admin access denied - attorney claims not found:', user.email)
+
+        if (!isAttorneyRole(idTokenResult.claims)) {
+          console.error(
+            'Admin access denied - attorney claims not found:',
+            user.email
+          )
           router.push('/login')
           return
         }
@@ -56,11 +70,11 @@ export default function AdminPage() {
   useEffect(() => {
     const fetchCases = async () => {
       if (!user) return
-      
+
       try {
         const response = await fetch('/api/case/list')
         const data = await response.json()
-        
+
         if (data.success) {
           setCases(data.cases)
         } else {
@@ -129,8 +143,8 @@ export default function AdminPage() {
         </div>
 
         {/* Sign Out Button */}
-        <Button 
-          variant="outline" 
+        <Button
+          variant="outline"
           size="lg"
           onClick={handleSignOut}
           className="w-full"
@@ -162,12 +176,22 @@ export default function AdminPage() {
               <CardTitle>Select Case</CardTitle>
             </CardHeader>
             <CardContent>
-              <Select onValueChange={setSelectedCaseId} value={selectedCaseId} disabled={casesLoading}>
+              <Select
+                onValueChange={setSelectedCaseId}
+                value={selectedCaseId}
+                disabled={casesLoading}
+              >
                 <SelectTrigger>
-                  <SelectValue placeholder={casesLoading ? "Loading cases..." : "Choose a case for document upload"} />
+                  <SelectValue
+                    placeholder={
+                      casesLoading
+                        ? 'Loading cases...'
+                        : 'Choose a case for document upload'
+                    }
+                  />
                 </SelectTrigger>
                 <SelectContent>
-                  {cases.map((caseData) => (
+                  {cases.map(caseData => (
                     <SelectItem key={caseData.caseId} value={caseData.caseId}>
                       {caseData.caseType} - {caseData.status}
                     </SelectItem>

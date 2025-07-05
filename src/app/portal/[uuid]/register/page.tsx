@@ -1,10 +1,16 @@
-"use client"
+'use client'
 
 import { useParams, useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { createUserWithEmailAndPassword } from 'firebase/auth'
 import { clientAuth } from '@/lib/firebase/client'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
@@ -18,7 +24,7 @@ export default function PortalRegisterPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     if (!email || !password) {
       console.error('Email and password are required')
       return
@@ -30,9 +36,13 @@ export default function PortalRegisterPage() {
     }
 
     try {
-      const userCredential = await createUserWithEmailAndPassword(clientAuth, email, password)
+      const userCredential = await createUserWithEmailAndPassword(
+        clientAuth,
+        email,
+        password
+      )
       console.log('User created:', userCredential.user.uid)
-      
+
       // Update portal registration status to completed
       const response = await fetch('/api/portal/update-registration-status', {
         method: 'POST',
@@ -40,12 +50,12 @@ export default function PortalRegisterPage() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          portalUuid: uuid
-        })
-      });
+          portalUuid: uuid,
+        }),
+      })
 
       if (!response.ok) {
-        console.error('Failed to update registration status');
+        console.error('Failed to update registration status')
       }
 
       // Set custom claims for the new client user
@@ -56,12 +66,12 @@ export default function PortalRegisterPage() {
         },
         body: JSON.stringify({
           uid: userCredential.user.uid,
-          portalUuid: uuid
-        })
-      });
+          portalUuid: uuid,
+        }),
+      })
 
       if (!claimsResponse.ok) {
-        console.error('Failed to set client claims');
+        console.error('Failed to set client claims')
       }
 
       router.push(`/portal/${uuid}`)
@@ -75,34 +85,32 @@ export default function PortalRegisterPage() {
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle>Portal Registration</CardTitle>
-          <CardDescription>
-            Portal ID: {uuid}
-          </CardDescription>
+          <CardDescription>Portal ID: {uuid}</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
-              <Input 
-                id="email" 
-                type="email" 
+              <Input
+                id="email"
+                type="email"
                 placeholder="your@email.com"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={e => setEmail(e.target.value)}
               />
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
-              <Input 
-                id="password" 
-                type="password" 
+              <Input
+                id="password"
+                type="password"
                 placeholder="••••••••"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={e => setPassword(e.target.value)}
               />
             </div>
-            
+
             <Button type="submit" className="w-full">
               Create Account
             </Button>

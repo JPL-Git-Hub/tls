@@ -3,11 +3,13 @@ NEVER ADD A DATA OBJECT WITHOUT MY PERMISSION.
 # CLAUDE.md - Development Guidelines for Claude Code
 
 ## Core Development Constraints
+
 - **Schema modifications**: Never add/modify data objects in schemas.ts without explicit permission
 - **Authentication boundaries**: Maintain strict admin/client separation per auth flow patterns
 - **File structure**: Follow server/client module separation - no cross-contamination
 
 ## Technical Debt Prevention
+
 - **Root cause resolution**: Fix import paths, environment loading, and module resolution - never duplicate code
 - **Single source of truth**: Use existing schemas, collections, and Firebase modules - never hardcode or recreate
 - **Reject shortcuts**: All code must import from established patterns or properly extend them
@@ -16,12 +18,14 @@ NEVER ADD A DATA OBJECT WITHOUT MY PERMISSION.
 - **Error handling scope**: Declare variables outside try-catch blocks when error handlers need access for logging/context
 
 ## Project Functionality and Scale
+
 Single codebase, single domain (thelawshop.com).
 
 A public website built for:
-- lead generation (forms), 
-- scheduling consults (cal.com API booking), and 
-- client acquisition upon payment (Stripe API payment). 
+
+- lead generation (forms),
+- scheduling consults (cal.com API booking), and
+- client acquisition upon payment (Stripe API payment).
 
 Also a private portal system built for case management for retained clients at a scale of 1,000 portals with a maximum of 10 concurrent users.
 
@@ -30,10 +34,12 @@ Also a private portal system built for case management for retained clients at a
 ### Firebase Import Pattern Requirements
 
 **Configuration modules** (`*-config.ts`):
+
 - Import shared validated config objects from centralized validation
 - No direct Firebase SDK imports in config files
 
 **Functional modules** (`firebase-*.ts`, API routes, components):
+
 - **Instance imports**: Use `adminDb`, `clientAuth`, `clientDb`, `adminAuth` from `@/lib/firebase/admin`, `@/lib/firebase/client`
 - **SDK function imports**: Import directly from SDK packages at point of use
   - ✅ Correct: `import { doc, setDoc } from 'firebase/firestore'`
@@ -44,6 +50,7 @@ Also a private portal system built for case management for retained clients at a
 ### Server-Side vs Client-Side Separation
 
 **Server-Side Modules:**
+
 - **`admin.ts`**: Admin SDK with service account credentials, API route operations
 - **`firestore.ts`**: Server-side database operations, elevated data access
 - Environment variables: `FIREBASE_PRIVATE_KEY`, `FIREBASE_CLIENT_EMAIL`
@@ -51,6 +58,7 @@ Also a private portal system built for case management for retained clients at a
 - Portal creation, user management, elevated privileges
 
 **Client-Side Modules:**
+
 - **`auth.ts`**: Dual authentication flows (attorney Google OAuth + client email/password)
 - **`storage.ts`**: Client-side file operations, document uploads
 - Environment variables: `NEXT_PUBLIC_*` prefixed only
@@ -64,16 +72,19 @@ Also a private portal system built for case management for retained clients at a
 ### Runtime Constraints and Implementation Patterns
 
 **Browser Compatibility Requirements:**
+
 - **Client-side files**: Must use `NEXT_PUBLIC_*` environment variables only
 - **File naming**: `firebase-client-config.ts` for browser-safe configuration
 - **Import restriction**: No `node:process` or server-only modules in client files
 
 **Edge Runtime vs Node.js Constraints:**
+
 - **Middleware (`middleware.ts`)**: Cannot import Firebase Admin SDK (Edge Runtime limitation)
 - **API routes (`/api/*`)**: Use Firebase Admin SDK (Node.js runtime)
 - **Route protection**: Server-side verification functions in API routes, not middleware
 
 **File Structure Guardrails:**
+
 - **`firebase-admin-config.ts`**: Server environment variables, service account credentials
 - **`firebase-client-config.ts`**: Public environment variables, browser-safe configuration
 - **`admin.ts`**: Admin SDK initialization, server-only functions
@@ -83,22 +94,26 @@ Also a private portal system built for case management for retained clients at a
 - **No cross-contamination**: Server files never imported by client components
 
 **Route Pages Pattern:**
+
 - **Route pages**: Server components by default. Only use "use client" for pages requiring React hooks or browser APIs
 - **Layout components**: Server components unless managing client state
 - **Interactive components**: Use "use client" only when necessary for user interactions
 
 **Emulator Configuration Pattern:**
+
 - USE_EMULATOR=true flag controls Firebase SDK initialization
 - Demo configuration values bypass validation in emulator mode
 - Conditional SDK connections: connectAuthEmulator, connectFirestoreEmulator, connectStorageEmulator
 
 **Security Rules Pattern:**
+
 - Same firestore.rules and storage.rules files used by live project and emulators
 - Development-permissive rules: authenticated access for testing
 
 ### Authentication Flow Separation
 
 **Admin vs Client Authentication Boundary:**
+
 - **Attorney authentication**: Google OAuth + environment variable validation in `/login` route
 - **Client authentication**: Portal UUID access via `/portal/[uuid]` route (future: email/password + Google OAuth)
 - **Security pattern**: Separate authentication systems prevent client access to admin functions
@@ -108,6 +123,7 @@ Also a private portal system built for case management for retained clients at a
 ### Module Responsibilities
 
 Follow single responsibility per module pattern established in codebase.
+
 - **auth.ts**: Client authentication only. No admin operations, no case data queries
 - **firestore.ts**: Case/client CRUD operations. Import from admin.ts for server routes, client.ts for components
 - **storage.ts**: Document uploads with case association. Must validate file types and sizes
@@ -116,17 +132,19 @@ Follow single responsibility per module pattern established in codebase.
 ### TypeScript Interface Patterns
 
 **Never duplicate interfaces** across components and utilities - derive from existing schema types using utility types (`Omit`, `Pick`, `Partial`)
+
 - **Separate user input from database records** - form interfaces should omit system-generated fields (IDs, timestamps) from schema types
 - **Use schema-derived types** - `Omit<ClientData, 'clientId' | 'createdAt' | 'updatedAt'>` instead of duplicate interface definitions
 - **Form-to-schema alignment** - all form submissions must map cleanly to database schema without field mismatches
 
 **Pattern violations:**
+
 - Defining same interface in multiple files
 - Form interfaces including database-only fields
 - Manual interface creation when schema types exist
 
-
 ## Integration Boundaries
+
 **External APIs**: Cal.com booking, Stripe payments, Google Maps property display, pdf.js document viewing
 **File handling**: PDF upload/download with client-side viewing and signing capabilities  
 **Data relationships**: Many-to-many client-case relationships via junction collections
@@ -140,11 +158,13 @@ Follow single responsibility per module pattern established in codebase.
 ### Startup vs Runtime Error Handling
 
 **Startup errors** (application initialization):
+
 - **Fail-fast configuration validation**: Missing environment variables, invalid Firebase config
 - **Crash immediately**: Configuration problems prevent app start
 - **No user interaction**: Errors occur before user requests
 
 **Runtime errors** (user requests, API calls):
+
 - **Complete debugging context required in all errors**
 - **Service boundary error wrapping**: All external service initializations (Firebase, Stripe, Cal.com) must wrap SDK calls with try-catch blocks that provide TLS-specific context, even after centralized validation passes. Runtime failures should specify: service name, operation attempted, likely causes, and next debugging steps
 - **Service-specific error handling for Firebase/Stripe/Cal.com**
@@ -162,12 +182,14 @@ Structure service boundary errors as JSON objects with error_code, message, serv
 ### Development vs Testing Environment Strategy
 
 **Development workflow:**
+
 - Live Firebase (tls-unified), Stripe, and Cal.com services with ngrok tunnels
 - No emulators during active development - test against real service integrations
 - Environment validation for live Firebase + ngrok development
 - Use `local-dev-real.sh` for development iteration
 
 **Testing environment:**
+
 - Firebase emulators available for automated testing and CI/CD
 - Emulator usage: Testing-only, not for development iteration
 - Use `local-dev-emulator.sh` for test automation
@@ -176,20 +198,24 @@ Structure service boundary errors as JSON objects with error_code, message, serv
 ### External Service Integration Patterns
 
 **Internal Feature Development:**
+
 - Use existing Firestore patterns and schema objects
 - Reference established component structures
 - Focus on business logic within current architecture
 
 **External Service Integration:**
+
 - Cal.com: Booking webhook integration with case creation
 - Stripe: Payment webhook integration with case lifecycle
 - Google Maps: Property display integration with case data
 - Require additional validation, error handling, and testing approaches
 
 ## Service Configuration Architecture
+
 All external service configs (Firebase, Stripe, Cal.com) validated in single centralized location. Service modules import shared validated config rather than implementing duplicate validation. Use `-config.ts` suffix for configuration files. No configuration frameworks - direct environment variable validation with fail-fast startup validation.
 
 ### Configuration Layer Pattern
+
 - Central validation in `/config/` directory with fail-fast startup validation
 - Service modules import shared validated config rather than duplicate validation
 - Service-specific functions focus exclusively on functionality (3-5 lines after centralization)
@@ -198,21 +224,25 @@ All external service configs (Firebase, Stripe, Cal.com) validated in single cen
 ## Incremental Implementation Approach
 
 ### Single-Objective Implementation
+
 **Interpret all prompts as single-objective requests** and implement only the specific deliverable requested.
 
 **✅ Implementation patterns:**
+
 - **Single deliverable focus** - Complete one clear objective per response
 - **Build on existing foundation** - Reference and extend previously created components
 - **Follow established patterns** - Use existing codebase patterns and conventions
 - **Minimal scope changes** - Avoid expanding beyond the specific request
 
 **❌ Avoid over-implementation:**
+
 - Multiple objectives in single response
 - Comprehensive solutions beyond request scope
 - Implementing multiple architectural layers simultaneously
 - Front-loading enhancements not requested
 
 ### Incremental Development Sequence
+
 **When complexity emerges, break into logical steps:**
 
 1. **Foundation**: Implement core requirement only
@@ -221,22 +251,27 @@ All external service configs (Firebase, Stripe, Cal.com) validated in single cen
 4. **Enhancement**: Add requested improvements to working implementation
 
 ### Implementation Control
+
 **Recognize when to limit scope:**
+
 - Task involves multiple architectural concerns - focus on primary objective
 - Multiple responsibilities emerge - address foundation first
 - Complete system implementation requested - deliver core functionality
 
 **Response approach:**
+
 - Deliver focused implementation
 - Note logical next steps for future prompts
 - Reference existing codebase patterns consistently
 
 ## Development Tooling Pattern
+
 **Prettier**: Configure for formatting without linting errors. Install as dev dependency with separate format scripts (`format`, `format:check`). Keep ESLint and Prettier as independent tools - no integration that blocks development.
 
 **Concurrently**: Use for simultaneous dev processes. Standard pattern: `"dev": "concurrently \"next dev\" \"ngrok start my-app\""` for local development with permanent ngrok tunnel.
 
 **Standard Port Allocation:**
+
 - Next.js: 3000
 - Emulator UI: 4000
 - Auth emulator: 9099
@@ -244,13 +279,15 @@ All external service configs (Firebase, Stripe, Cal.com) validated in single cen
 - Storage emulator: 9199
 
 **Development Scripts:**
+
 - local-dev-real.sh: Live Firebase + ngrok
 - local-dev-emulator.sh: Firebase emulators + dev server
 - Synchronized cleanup prevents process conflicts
 
 ## Architecture
+
 - **Frontend**: Next.js 15 (App Router) with TypeScript
-- **Styling**: Tailwind CSS + shadcn/ui components  
+- **Styling**: Tailwind CSS + shadcn/ui components
 - **Forms**: react-hook-form + Zod validation
 - **Database**: Firebase (Firestore + Storage + Auth)
 - **State**: React built-ins + Firebase (native optimistic behavior)
@@ -258,4 +295,5 @@ All external service configs (Firebase, Stripe, Cal.com) validated in single cen
 - **Data**: Native fetch API + Firebase SDK
 
 ## Dependency Alignment Validation
+
 **Package.json principle**: Dependencies must align with stated architecture. Acceptable additions: implementation utilities (date-fns, lucide-react, sonner) that support core architecture without contradicting it. No alternative frameworks that duplicate architectural choices (no Redux with React built-ins, no Axios with native fetch).

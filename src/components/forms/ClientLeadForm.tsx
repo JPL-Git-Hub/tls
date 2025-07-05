@@ -1,4 +1,4 @@
-"use client"
+'use client'
 
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
@@ -6,7 +6,13 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { submitClientLead } from '@/lib/forms/client-submission'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import {
   Form,
@@ -21,7 +27,7 @@ const clientLeadSchema = z.object({
   firstName: z.string().min(1, 'First name is required'),
   lastName: z.string().min(1, 'Last name is required'),
   email: z.string().email('Valid email is required'),
-  mobilePhone: z.string().min(10, 'Valid phone number is required')
+  mobilePhone: z.string().min(10, 'Valid phone number is required'),
 })
 
 type ClientLeadFormData = z.infer<typeof clientLeadSchema>
@@ -36,26 +42,26 @@ export default function ClientLeadForm() {
       firstName: '',
       lastName: '',
       email: '',
-      mobilePhone: ''
-    }
+      mobilePhone: '',
+    },
   })
 
   const handleSubmit = async (data: ClientLeadFormData) => {
     setIsLoading(true)
-    
+
     try {
       const clientId = await submitClientLead(data)
-      
+
       const response = await fetch('/api/portal/create-from-lead', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ clientId })
+        body: JSON.stringify({ clientId }),
       })
-      
+
       const result = await response.json()
-      
+
       if (result.success) {
         setPortalUuid(result.portalUuid)
         setIsSuccess(true)
@@ -82,9 +88,11 @@ export default function ClientLeadForm() {
           <p className="text-center text-muted-foreground">
             Portal ID: {portalUuid}
           </p>
-          <Button 
-            className="w-full" 
-            onClick={() => window.location.href = `/portal/${portalUuid}/register`}
+          <Button
+            className="w-full"
+            onClick={() =>
+              (window.location.href = `/portal/${portalUuid}/register`)
+            }
           >
             Complete Portal Registration
           </Button>
@@ -97,13 +105,14 @@ export default function ClientLeadForm() {
     <Card className="w-full max-w-md">
       <CardHeader>
         <CardTitle>Get Started</CardTitle>
-        <CardDescription>
-          Enter your details to begin
-        </CardDescription>
+        <CardDescription>Enter your details to begin</CardDescription>
       </CardHeader>
       <CardContent>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+          <form
+            onSubmit={form.handleSubmit(handleSubmit)}
+            className="space-y-4"
+          >
             <FormField
               control={form.control}
               name="firstName"
@@ -117,7 +126,7 @@ export default function ClientLeadForm() {
                 </FormItem>
               )}
             />
-            
+
             <FormField
               control={form.control}
               name="lastName"
@@ -131,7 +140,7 @@ export default function ClientLeadForm() {
                 </FormItem>
               )}
             />
-            
+
             <FormField
               control={form.control}
               name="email"
@@ -139,13 +148,17 @@ export default function ClientLeadForm() {
                 <FormItem>
                   <FormLabel>Email</FormLabel>
                   <FormControl>
-                    <Input type="email" placeholder="john@example.com" {...field} />
+                    <Input
+                      type="email"
+                      placeholder="john@example.com"
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            
+
             <FormField
               control={form.control}
               name="mobilePhone"
@@ -159,12 +172,8 @@ export default function ClientLeadForm() {
                 </FormItem>
               )}
             />
-            
-            <Button 
-              type="submit" 
-              className="w-full" 
-              disabled={isLoading}
-            >
+
+            <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading ? 'Submitting...' : 'Submit'}
             </Button>
           </form>

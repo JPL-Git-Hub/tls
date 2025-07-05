@@ -1,31 +1,41 @@
-"use client"
+'use client'
 
-import { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { signInWithGoogle } from '@/lib/firebase/auth';
-import { UserCredential } from 'firebase/auth';
+import { useState } from 'react'
+import { Button } from '@/components/ui/button'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
+import { signInWithGoogle } from '@/lib/firebase/auth'
+import { UserCredential } from 'firebase/auth'
 
 interface AttorneyLoginProps {
-  onSuccess?: (user: UserCredential) => void;
-  onError?: (error: string) => void;
+  onSuccess?: (user: UserCredential) => void
+  onError?: (error: string) => void
 }
 
-export default function AttorneyLogin({ onSuccess, onError }: AttorneyLoginProps) {
-  const [isLoading, setIsLoading] = useState(false);
+export default function AttorneyLogin({
+  onSuccess,
+  onError,
+}: AttorneyLoginProps) {
+  const [isLoading, setIsLoading] = useState(false)
 
   const handleGoogleSignIn = async () => {
-    setIsLoading(true);
+    setIsLoading(true)
     try {
-      const userCredential = await signInWithGoogle();
-      onSuccess?.(userCredential);
+      const userCredential = await signInWithGoogle()
+      onSuccess?.(userCredential)
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Google sign-in failed';
-      onError?.(errorMessage);
+      const errorMessage =
+        error instanceof Error ? error.message : 'Google sign-in failed'
+      onError?.(errorMessage)
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
   return (
     <Card className="w-full max-w-md mx-auto">
@@ -46,5 +56,5 @@ export default function AttorneyLogin({ onSuccess, onError }: AttorneyLoginProps
         </Button>
       </CardContent>
     </Card>
-  );
+  )
 }
