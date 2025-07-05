@@ -18,10 +18,12 @@ export default function LoginPage() {
 
   const handleGoogleSignIn = async () => {
     setIsLoading(true)
+    let userEmail: string | undefined
 
     try {
       const userCredential = await signInWithGoogle()
       const user = userCredential.user
+      userEmail = user.email || undefined
 
       // Check custom claims for attorney authorization
       const idTokenResult = await user.getIdTokenResult()
@@ -37,7 +39,18 @@ export default function LoginPage() {
 
       router.push('/admin')
     } catch (error) {
-      console.error('Login error:', error)
+      console.error('Attorney login failed:', JSON.stringify({
+        error_code: 'ATTORNEY_LOGIN_FAILED',
+        message: 'Failed to authenticate attorney via Google OAuth',
+        service: 'Firebase Auth',
+        operation: 'google_oauth_signin',
+        context: { 
+          email: userEmail,
+          domain_check: userEmail?.endsWith('@thelawshop.com')
+        },
+        remediation: 'Verify Google OAuth configuration and domain restrictions',
+        original_error: error instanceof Error ? error.message : 'Unknown error'
+      }, null, 2))
     } finally {
       setIsLoading(false)
     }
