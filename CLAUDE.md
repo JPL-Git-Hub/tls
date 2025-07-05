@@ -8,6 +8,15 @@ NEVER ADD A DATA OBJECT WITHOUT MY PERMISSION.
 - **Authentication boundaries**: Maintain strict admin/client separation per auth flow patterns
 - **File structure**: Follow server/client module separation - no cross-contamination
 
+## Code Quality Standards
+
+- **TypeScript**: Zero compilation errors enforced across all files
+- **ESLint**: Next.js strict rules with zero warnings/errors  
+- **Prettier**: Consistent formatting, independent from ESLint (no integration that blocks development)
+- **Error Handling**: Structured JSON logging with error codes and remediation guidance
+- **Type Safety**: Zero `any` types, proper error handling with type guards
+- **Schema Compliance**: Reference actual field names from `schemas.ts`, not assumptions
+
 ## Technical Debt Prevention
 
 - **Root cause resolution**: Fix import paths, environment loading, and module resolution - never duplicate code
@@ -20,6 +29,8 @@ NEVER ADD A DATA OBJECT WITHOUT MY PERMISSION.
 ## Project Functionality and Scale
 
 Single codebase, single domain (thelawshop.com).
+**Scale Constraints**: 1,000 portals maximum, 10 concurrent users across all portals.
+**Business Flow**: Lead generation → consultation → client acquisition → case management.
 
 A public website built for:
 
@@ -35,6 +46,8 @@ Also a private portal system built for case management for retained clients at a
 
 **Configuration modules** (`*-config.ts`):
 
+- **Centralized validation**: All configs validated in single `/config/` directory with fail-fast startup validation
+- **Service modules import shared validated config** rather than implementing duplicate validation
 - Import shared validated config objects from centralized validation
 - No direct Firebase SDK imports in config files
 
@@ -74,6 +87,8 @@ Also a private portal system built for case management for retained clients at a
 **Browser Compatibility Requirements:**
 
 - **Client-side files**: Must use `NEXT_PUBLIC_*` environment variables only
+- **Runtime Constraints**: Edge vs Node.js limitations documented and enforced
+- **Middleware limitations**: Cannot import Firebase Admin SDK (Edge Runtime constraint)
 - **File naming**: `firebase-client-config.ts` for browser-safe configuration
 - **Import restriction**: No `node:process` or server-only modules in client files
 
@@ -132,6 +147,8 @@ Follow single responsibility per module pattern established in codebase.
 ### TypeScript Interface Patterns
 
 **Never duplicate interfaces** across components and utilities - derive from existing schema types using utility types (`Omit`, `Pick`, `Partial`)
+**Schema-Derived Types**: Use utility types vs duplicate interfaces for form handling
+**Type Safety**: Zero `any` types, proper error handling with type guards
 
 - **Separate user input from database records** - form interfaces should omit system-generated fields (IDs, timestamps) from schema types
 - **Use schema-derived types** - `Omit<ClientData, 'clientId' | 'createdAt' | 'updatedAt'>` instead of duplicate interface definitions
@@ -146,6 +163,7 @@ Follow single responsibility per module pattern established in codebase.
 ## Integration Boundaries
 
 **External APIs**: Cal.com booking, Stripe payments, Google Maps property display, pdf.js document viewing
+**Integration Points**: Service boundary error wrapping required for all external service calls
 **File handling**: PDF upload/download with client-side viewing and signing capabilities  
 **Data relationships**: Many-to-many client-case relationships via junction collections
 
@@ -166,16 +184,31 @@ Follow single responsibility per module pattern established in codebase.
 **Runtime errors** (user requests, API calls):
 
 - **Complete debugging context required in all errors**
-- **Service boundary error wrapping**: All external service initializations (Firebase, Stripe, Cal.com) must wrap SDK calls with try-catch blocks that provide TLS-specific context, even after centralized validation passes. Runtime failures should specify: service name, operation attempted, likely causes, and next debugging steps
+- **Service boundary error wrapping**: All external service initializations (Firebase, Stripe, Cal.com) must wrap SDK calls with try-catch blocks that provide TLS-specific context, even after centralized validation passes
+
+**JSON Structured Logging Format:**
+```json
+{
+  "error_code": "ATTORNEY_LOGIN_FAILED",
+  "message": "Google OAuth signin failed",
+  "service": "Firebase Auth",
+  "operation": "google_oauth_signin",
+  "context": {
+    "email": "user@example.com",
+    "domain": "example.com",
+    "userId": "user_id_if_available"
+  },
+  "remediation": "Check domain restrictions and network connectivity"
+}
+```
+
+**Error Code Patterns**: `ATTORNEY_LOGIN_FAILED`, `USER_CLAIMS_RETRIEVAL_FAILED`, `PORTAL_CREATION_FAILED`
 - **Service-specific error handling for Firebase/Stripe/Cal.com**
 - **Environment validation for live Firebase + ngrok development**
 - **No graceful degradation - force immediate problem resolution**
 
 **Error handling coverage pattern:**
 Centralized validation handles config problems, service boundary wrapping handles runtime problems.
-
-**Error format for AI debugging optimization:**
-Structure service boundary errors as JSON objects with error_code, message, service, operation, remediation, and context fields.
 
 ## Development Environment Strategy
 
@@ -213,13 +246,6 @@ Structure service boundary errors as JSON objects with error_code, message, serv
 ## Service Configuration Architecture
 
 All external service configs (Firebase, Stripe, Cal.com) validated in single centralized location. Service modules import shared validated config rather than implementing duplicate validation. Use `-config.ts` suffix for configuration files. No configuration frameworks - direct environment variable validation with fail-fast startup validation.
-
-### Configuration Layer Pattern
-
-- Central validation in `/config/` directory with fail-fast startup validation
-- Service modules import shared validated config rather than duplicate validation
-- Service-specific functions focus exclusively on functionality (3-5 lines after centralization)
-- Use `-config.ts` suffix for configuration files
 
 ## Incremental Implementation Approach
 
