@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import './globals.css'
+import ClientErrorHandler from '@/components/ClientErrorHandler'
 
 export const metadata: Metadata = {
   title: 'The Law Shop',
@@ -13,7 +14,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <ClientErrorHandler />
+        {children}
+      </body>
     </html>
   )
 }
