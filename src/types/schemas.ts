@@ -1,8 +1,13 @@
 import { Timestamp as ClientTimestamp } from 'firebase/firestore'
-import { Timestamp as AdminTimestamp } from 'firebase-admin/firestore'
 
-// Union type to handle both client and admin Timestamps
-export type TimestampType = ClientTimestamp | AdminTimestamp
+// Type definition compatible with both client and admin Timestamps
+// Admin Timestamp has same structure as client Timestamp
+export type TimestampType = ClientTimestamp | {
+  seconds: number
+  nanoseconds: number
+  toDate(): Date
+  toMillis(): number
+}
 
 // Portal Status Enums
 export type PortalStatus = 'pending' | 'created' | 'active' | 'suspended'
@@ -13,22 +18,22 @@ export type CaseType =
   | 'Condo Apartment'
   | 'Coop Apartment'
   | 'Single Family House'
-  | "Other/Don't Know"
+  | 'Other'
 export type CaseStatus =
   | 'intake'
   | 'active'
-  | 'closing'
   | 'completed'
   | 'cancelled'
 
 // Document Type Enum
 export type DocumentType =
-  | 'contract'
-  | 'disclosure'
-  | 'inspection'
-  | 'mortgage'
-  | 'title'
-  | 'closing'
+  | 'contract of sale'
+  | 'term sheet'
+  | 'title report'
+  | 'board minutes'
+  | 'offering plan'
+  | 'financials'
+  | 'by-laws'
 
 // Client Role Type
 export type ClientRole = 'primary' | 'co-buyer'
@@ -68,7 +73,7 @@ export interface PortalData {
 // Case Data Schema (legal matter tracking)
 export interface CaseData {
   caseId: string
-  clientId: string
+  clientNames: string
   caseType: CaseType
   status: CaseStatus
   createdAt: TimestampType

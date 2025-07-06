@@ -48,7 +48,7 @@ export default function Home() {
               size="lg"
               className="h-16 text-lg md:col-span-2 lg:col-span-1 w-full"
             >
-              Login for Portal
+              Client Login
             </Button>
           </Link>
 

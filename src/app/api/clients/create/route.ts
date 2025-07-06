@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/firebase/firestore'
+import { createClient, createCase } from '@/lib/firebase/firestore'
 import { ClientData } from '@/types/schemas'
 
 type CreateClientRequest = Omit<
@@ -33,22 +33,33 @@ export async function POST(request: NextRequest) {
     // Create client using established firestore.ts function
     const clientId = await createClient(clientData)
 
+    // Create default case for the client
+    const caseId = await createCase(
+      {
+        clientNames: `${clientData.firstName} ${clientData.lastName}`,
+        caseType: 'Other',
+        status: 'intake',
+      },
+      [{ clientId, role: 'primary' }]
+    )
+
     return NextResponse.json({
       success: true,
       clientId,
-      message: 'Client created successfully',
+      caseId,
+      message: 'Client and case created successfully',
     })
   } catch (error) {
     const errorMessage =
       error instanceof Error ? error.message : 'Unknown error'
     console.error(
-      'Failed to create client:',
+      'Failed to create client and case:',
       JSON.stringify(
         {
-          error_code: 'CLIENT_CREATION_FAILED',
-          message: 'Failed to create client document',
+          error_code: 'CLIENT_CASE_CREATION_FAILED',
+          message: 'Failed to create client and case documents',
           service: 'Firebase Firestore',
-          operation: 'client_creation',
+          operation: 'client_case_creation',
           context: {
             clientData: clientData
               ? {
@@ -69,7 +80,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(
       {
-        error: 'Failed to create client',
+        error: 'Failed to create client and case',
         details: errorMessage,
       },
       { status: 500 }

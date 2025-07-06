@@ -30,17 +30,22 @@ NEVER ADD A DATA OBJECT WITHOUT MY PERMISSION.
 
 Single codebase, single domain (thelawshop.com).
 **Scale Constraints**: 1,000 portals maximum, 10 concurrent users across all portals.
-**Business Flow**: Lead generation → consultation → client acquisition → case management.
 
 A public website built for:
-
 - lead generation (forms),
 - scheduling consults (cal.com API booking), and
 - client acquisition upon payment (Stripe API payment).
 
-Also a private portal system built for case management for retained clients at a scale of 1,000 portals with a maximum of 10 concurrent users.
+Domain will also host a private portal system built for case management for retained clients at a scale of 1,000 portals with a maximum of 10 concurrent users.
 
-## Firebase Modular Architecture for Claude Code
+## Firebase Architecture
+
+### Firebase SDK Pattern Compliance
+
+- **Admin files** (`firestore.ts`, API routes): Admin SDK syntax only
+- **Client files** (`auth.ts`, components): Client SDK syntax only  
+- **NEVER mix**: Client SDK syntax (doc/setDoc) in admin files, even with admin instances
+- **Shared Type Files**: Type definition files used by client code cannot import Firebase Admin SDK or other server-only modules. Use client SDK types (identical structure) for shared interfaces.
 
 ### Firebase Import Pattern Requirements
 
@@ -144,22 +149,6 @@ Follow single responsibility per module pattern established in codebase.
 - **storage.ts**: Document uploads with case association. Must validate file types and sizes
 - **admin.ts**: Portal creation, user management. API routes only - never import in client components
 
-### TypeScript Interface Patterns
-
-**Never duplicate interfaces** across components and utilities - derive from existing schema types using utility types (`Omit`, `Pick`, `Partial`)
-**Schema-Derived Types**: Use utility types vs duplicate interfaces for form handling
-**Type Safety**: Zero `any` types, proper error handling with type guards
-
-- **Separate user input from database records** - form interfaces should omit system-generated fields (IDs, timestamps) from schema types
-- **Use schema-derived types** - `Omit<ClientData, 'clientId' | 'createdAt' | 'updatedAt'>` instead of duplicate interface definitions
-- **Form-to-schema alignment** - all form submissions must map cleanly to database schema without field mismatches
-
-**Pattern violations:**
-
-- Defining same interface in multiple files
-- Form interfaces including database-only fields
-- Manual interface creation when schema types exist
-
 ## Integration Boundaries
 
 **External APIs**: Cal.com booking, Stripe payments, Google Maps property display, pdf.js document viewing
@@ -186,7 +175,8 @@ Follow single responsibility per module pattern established in codebase.
 - **Complete debugging context required in all errors**
 - **Service boundary error wrapping**: All external service initializations (Firebase, Stripe, Cal.com) must wrap SDK calls with try-catch blocks that provide TLS-specific context, even after centralized validation passes
 
-**JSON Structured Logging Format:**
+### JSON Structured Logging Format
+
 ```json
 {
   "error_code": "ATTORNEY_LOGIN_FAILED",
@@ -203,6 +193,7 @@ Follow single responsibility per module pattern established in codebase.
 ```
 
 **Error Code Patterns**: `ATTORNEY_LOGIN_FAILED`, `USER_CLAIMS_RETRIEVAL_FAILED`, `PORTAL_CREATION_FAILED`
+
 - **Service-specific error handling for Firebase/Stripe/Cal.com**
 - **Environment validation for live Firebase + ngrok development**
 - **No graceful degradation - force immediate problem resolution**
@@ -219,13 +210,11 @@ Centralized validation handles config problems, service boundary wrapping handle
 - Live Firebase (tls-unified), Stripe, and Cal.com services with ngrok tunnels
 - No emulators during active development - test against real service integrations
 - Environment validation for live Firebase + ngrok development
-- Use `local-dev-real.sh` for development iteration
 
 **Testing environment:**
 
 - Firebase emulators available for automated testing and CI/CD
 - Emulator usage: Testing-only, not for development iteration
-- Use `local-dev-emulator.sh` for test automation
 - Maintains separation: live services for development, emulators for test automation
 
 ### External Service Integration Patterns
@@ -246,6 +235,42 @@ Centralized validation handles config problems, service boundary wrapping handle
 ## Service Configuration Architecture
 
 All external service configs (Firebase, Stripe, Cal.com) validated in single centralized location. Service modules import shared validated config rather than implementing duplicate validation. Use `-config.ts` suffix for configuration files. No configuration frameworks - direct environment variable validation with fail-fast startup validation.
+
+## Development Tooling Pattern
+
+**Prettier**: Configure for formatting without linting errors. Install as dev dependency with separate format scripts (`format`, `format:check`). Keep ESLint and Prettier as independent tools - no integration that blocks development.
+
+**Concurrently**: Use for simultaneous dev processes. Standard pattern: `"dev": "concurrently \"next dev\" \"ngrok start my-app\""` for local development with permanent ngrok tunnel.
+
+### Standard Port Allocation
+
+- Next.js: 3000
+- Emulator UI: 4000
+- Auth emulator: 9099
+- Firestore emulator: 8080
+- Storage emulator: 9199
+
+### Development Scripts
+
+- local-dev-real.sh: Live Firebase + ngrok
+- local-dev-emulator.sh: Firebase emulators + dev server
+- Synchronized cleanup prevents process conflicts
+
+## TypeScript Interface Patterns
+
+**Never duplicate interfaces** across components and utilities - derive from existing schema types using utility types (`Omit`, `Pick`, `Partial`)
+**Schema-Derived Types**: Use utility types vs duplicate interfaces for form handling
+**Type Safety**: Zero `any` types, proper error handling with type guards
+
+- **Separate user input from database records** - form interfaces should omit system-generated fields (IDs, timestamps) from schema types
+- **Use schema-derived types** - `Omit<ClientData, 'clientId' | 'createdAt' | 'updatedAt'>` instead of duplicate interface definitions
+- **Form-to-schema alignment** - all form submissions must map cleanly to database schema without field mismatches
+
+**Pattern violations:**
+
+- Defining same interface in multiple files
+- Form interfaces including database-only fields
+- Manual interface creation when schema types exist
 
 ## Incremental Implementation Approach
 
@@ -290,26 +315,6 @@ All external service configs (Firebase, Stripe, Cal.com) validated in single cen
 - Note logical next steps for future prompts
 - Reference existing codebase patterns consistently
 
-## Development Tooling Pattern
-
-**Prettier**: Configure for formatting without linting errors. Install as dev dependency with separate format scripts (`format`, `format:check`). Keep ESLint and Prettier as independent tools - no integration that blocks development.
-
-**Concurrently**: Use for simultaneous dev processes. Standard pattern: `"dev": "concurrently \"next dev\" \"ngrok start my-app\""` for local development with permanent ngrok tunnel.
-
-**Standard Port Allocation:**
-
-- Next.js: 3000
-- Emulator UI: 4000
-- Auth emulator: 9099
-- Firestore emulator: 8080
-- Storage emulator: 9199
-
-**Development Scripts:**
-
-- local-dev-real.sh: Live Firebase + ngrok
-- local-dev-emulator.sh: Firebase emulators + dev server
-- Synchronized cleanup prevents process conflicts
-
 ## Architecture
 
 - **Frontend**: Next.js 15 (App Router) with TypeScript
@@ -322,4 +327,30 @@ All external service configs (Firebase, Stripe, Cal.com) validated in single cen
 
 ## Dependency Alignment Validation
 
-**Package.json principle**: Dependencies must align with stated architecture. Acceptable additions: implementation utilities (date-fns, lucide-react, sonner) that support core architecture without contradicting it. No alternative frameworks that duplicate architectural choices (no Redux with React built-ins, no Axios with native fetch).
+**Package.json principle**: Dependencies must align with stated architecture. Acceptable additions: implementation utilities (date-fns, lucide-react, sonner) that support core architecture without contradicting it. No alternative frameworks that duplicate architectural choices (no Redux with React built-ins, no Axios with native fetch)
+
+# FOR REVIEW: New Development Patterns
+
+## Query Performance and Index Management
+
+**Development-First Query Strategy:**
+
+- **Start with basic queries**: Use simple `where()` queries to verify data relationships and flow
+- **Add complexity incrementally**: Add `orderBy()`, `limit()`, and complex filters after data flow is confirmed
+- **Firestore composite index rule**: Any query with `where()` + `orderBy()` on different fields requires a composite index
+- **Index error decision tree**: When Firestore throws index errors, decide: create index via provided console link or sort in application code
+- **Development preference**: For small scale/development, application sorting is often simpler than managing multiple indexes
+- **Production transition**: Create proper indexes when moving to production for performance
+
+**Pattern Example:**
+```typescript
+// Start with this to verify data exists
+.where('caseId', '==', caseId)
+
+// Add this after confirming data flow works
+.where('caseId', '==', caseId)
+.orderBy('createdAt', 'desc')
+
+// If index error: either create index or sort in code
+allDocuments.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+```.

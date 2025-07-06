@@ -1,3 +1,5 @@
+My comments in [brackets].
+
 # Case Creation Analysis
 
 ## Current Flow Analysis
@@ -7,6 +9,8 @@
 1. **Client Creation**: `/api/clients/create` → creates `ClientData` only
 2. **Portal Creation**: `/api/portal/create-from-lead` → creates `PortalData` only
 3. **Missing**: No `CaseData` creation in either flow
+
+[Currently, I am having the form create a role:client.  In the future, it will create a role:lead.  Perhaps now it is better to create both a lead and a client, and in the future just have it create the role:lead and create the separate trigger for change to  role:client? Leads cannot have cases. Only clients. But leads do contact us about potential cases, so maybe it should create the case which can be potential or actual? Then if there is case data we can start collecting it during consult?]
 
 ### Problem Statement
 

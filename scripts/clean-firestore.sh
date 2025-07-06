@@ -67,6 +67,9 @@ deleteCollectionDocs('${collection}').catch(error => {
 delete_collection "clients"
 delete_collection "portals"
 delete_collection "cases"
+delete_collection "client_cases"
+delete_collection "documents"
+delete_collection "webhook_events"
 
 # Clean Firebase Auth client users (preserve attorney accounts)
 echo "🔐 Cleaning Firebase Auth client users..."
@@ -172,7 +175,7 @@ npx tsx --env-file=.env.local -e "
 const { adminDb } = require('./src/lib/firebase/admin');
 
 async function verifyCleanup() {
-  const collections = ['clients', 'portals', 'cases'];
+  const collections = ['clients', 'portals', 'cases', 'client_cases', 'documents'];
   
   for (const collection of collections) {
     try {
@@ -195,6 +198,6 @@ verifyCleanup().catch(error => {
 
 echo ""
 echo "🎉 Database cleanup completed!"
-echo "📝 All client, portal, and case data has been removed."
+echo "📝 All client, portal, case, client_cases, and document data has been removed."
 echo "🔐 Client Firebase Auth users deleted (attorney accounts preserved)."
 echo "💡 You can now create fresh test data without conflicts."

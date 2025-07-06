@@ -10,6 +10,7 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { DocumentUpload } from '@/components/ui/document-upload'
+import { DocumentViewer } from '@/components/ui/document-viewer'
 import {
   Select,
   SelectContent,
@@ -22,8 +23,8 @@ import { useRouter } from 'next/navigation'
 import { onAuthStateChanged, signOut, User } from 'firebase/auth'
 import { clientAuth } from '@/lib/firebase/client'
 import { uploadDocument } from '@/lib/firebase/storage'
-import { CaseData } from '@/types/schemas'
-import { isAttorneyRole } from '@/lib/firebase/custom-claims'
+import { CaseData, DocumentData } from '@/types/schemas'
+import { isAttorneyRole } from '@/lib/utils/claims'
 
 export default function AdminPage() {
   const [user, setUser] = useState<User | null>(null)
@@ -32,6 +33,7 @@ export default function AdminPage() {
   const [isUploading, setIsUploading] = useState(false)
   const [cases, setCases] = useState<CaseData[]>([])
   const [casesLoading, setCasesLoading] = useState(true)
+  const [documents, setDocuments] = useState<DocumentData[]>([])
   const router = useRouter()
 
   useEffect(() => {
@@ -120,10 +122,34 @@ export default function AdminPage() {
     setIsUploading(true)
     try {
       const downloadURL = await uploadDocument(file, caseId)
-      console.log('Document uploaded:', downloadURL)
-      // TODO: Implement document metadata storage in Firestore (planned feature enhancement)
+      console.log('Document uploaded to storage:', downloadURL)
+      
+      // Create document metadata in Firestore
+      const metadataResponse = await fetch('/api/documents/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          caseId,
+          fileName: file.name,
+          fileUrl: downloadURL,
+          docType: 'contract of sale', // Default document type
+          uploadedAt: new Date().toISOString(),
+        }),
+      })
+
+      const metadataResult = await metadataResponse.json()
+      
+      if (metadataResult.success) {
+        console.log('Document metadata created:', metadataResult.documentId)
+        alert('Document uploaded successfully!')
+      } else {
+        throw new Error(metadataResult.error || 'Failed to create document metadata')
+      }
     } catch (error) {
       console.error('Upload error:', error)
+      alert('Failed to upload document: ' + (error instanceof Error ? error.message : 'Unknown error'))
     } finally {
       setIsUploading(false)
     }
@@ -193,7 +219,7 @@ export default function AdminPage() {
                 <SelectContent>
                   {cases.map(caseData => (
                     <SelectItem key={caseData.caseId} value={caseData.caseId}>
-                      {caseData.caseType} - {caseData.status}
+                      {caseData.caseId}
                     </SelectItem>
                   ))}
                   {cases.length === 0 && !casesLoading && (
@@ -212,6 +238,9 @@ export default function AdminPage() {
             isUploading={isUploading}
           />
         </div>
+
+        {/* Document Viewer Section */}
+        <DocumentViewer documents={documents} />
       </div>
     </div>
   )

@@ -1,6 +1,6 @@
 import { adminDb } from '@/lib/firebase/admin'
 import { Timestamp } from 'firebase-admin/firestore'
-import { ClientData, PortalData, CaseData, COLLECTIONS } from '@/types/schemas'
+import { ClientData, PortalData, CaseData, ClientCases, ClientRole, DocumentData, DocumentType, COLLECTIONS } from '@/types/schemas'
 
 // Server-side Firestore operations using Firebase Admin SDK
 // Used exclusively in API routes for elevated privileges
@@ -230,6 +230,110 @@ export const updatePortal = async (
 }
 
 // Case operations
+export const createCase = async (
+  caseData: Omit<CaseData, 'caseId' | 'createdAt' | 'updatedAt'>,
+  clients: Array<{ clientId: string; role: ClientRole }>
+) => {
+  let caseId: string | undefined
+
+  try {
+    const caseRef = adminDb.collection(COLLECTIONS.CASES).doc()
+    caseId = caseRef.id
+
+    const fullCaseData: CaseData = {
+      ...caseData,
+      caseId,
+      createdAt: Timestamp.now(),
+      updatedAt: Timestamp.now(),
+    }
+
+    await caseRef.set(fullCaseData)
+
+    // Create ClientCases junction records for each client
+    for (const client of clients) {
+      await createClientCaseRelationship(client.clientId, caseId, client.role)
+    }
+
+    return caseId
+  } catch (error) {
+    console.error(
+      'Failed to create case:',
+      JSON.stringify(
+        {
+          error_code: 'CASE_CREATION_FAILED',
+          message: 'Failed to create case document in Firestore',
+          service: 'Firebase Firestore',
+          operation: 'case_creation',
+          context: {
+            caseId,
+            clients: clients.map(c => ({ clientId: c.clientId, role: c.role })),
+            caseType: caseData.caseType,
+            status: caseData.status,
+          },
+          remediation:
+            'Verify Firebase Admin SDK permissions and Firestore rules',
+          original_error:
+            error instanceof Error ? error.message : 'Unknown error',
+        },
+        null,
+        2
+      )
+    )
+    throw error
+  }
+}
+
+// ClientCases junction table operations
+export const createClientCaseRelationship = async (
+  clientId: string,
+  caseId: string,
+  role: ClientRole
+) => {
+  let participantId: string | undefined
+
+  try {
+    const participantRef = adminDb.collection(COLLECTIONS.CLIENT_CASES).doc()
+    participantId = participantRef.id
+
+    const clientCaseData: ClientCases = {
+      participantId,
+      clientId,
+      caseId,
+      role,
+      createdAt: Timestamp.now(),
+      updatedAt: Timestamp.now(),
+    }
+
+    await participantRef.set(clientCaseData)
+    return participantId
+  } catch (error) {
+    console.error(
+      'Failed to create client-case relationship:',
+      JSON.stringify(
+        {
+          error_code: 'CLIENT_CASE_RELATIONSHIP_FAILED',
+          message: 'Failed to create client-case junction record',
+          service: 'Firebase Firestore',
+          operation: 'client_case_relationship_creation',
+          context: {
+            participantId,
+            clientId,
+            caseId,
+            role,
+          },
+          remediation:
+            'Verify Firebase Admin SDK permissions and Firestore rules',
+          original_error:
+            error instanceof Error ? error.message : 'Unknown error',
+        },
+        null,
+        2
+      )
+    )
+    throw error
+  }
+}
+
 export const getCases = async (): Promise<CaseData[]> => {
   let caseCount: number | undefined
 
@@ -247,6 +351,122 @@ export const getCases = async (): Promise<CaseData[]> => {
           service: 'Firebase Firestore',
           operation: 'cases_list_retrieval',
           context: { caseCount },
+          remediation:
+            'Verify Firebase Admin SDK permissions and Firestore rules',
+          original_error:
+            error instanceof Error ? error.message : 'Unknown error',
+        },
+        null,
+        2
+      )
+    )
+    throw error
+  }
+}
+
+
+// Document operations
+export const createDocument = async (
+  documentData: Omit<DocumentData, 'documentId' | 'createdAt' | 'updatedAt'>
+) => {
+  let documentId: string | undefined
+
+  try {
+    const documentRef = adminDb.collection(COLLECTIONS.DOCUMENTS).doc()
+    documentId = documentRef.id
+
+    const fullDocumentData: DocumentData = {
+      ...documentData,
+      documentId,
+      createdAt: Timestamp.now(),
+      updatedAt: Timestamp.now(),
+    }
+
+    await documentRef.set(fullDocumentData)
+    return documentId
+  } catch (error) {
+    console.error(
+      'Failed to create document:',
+      JSON.stringify(
+        {
+          error_code: 'DOCUMENT_CREATION_FAILED',
+          message: 'Failed to create document metadata in Firestore',
+          service: 'Firebase Firestore',
+          operation: 'document_creation',
+          context: {
+            documentId,
+            caseId: documentData.caseId,
+            fileName: documentData.fileName,
+            docType: documentData.docType,
+          },
+          remediation:
+            'Verify Firebase Admin SDK permissions and Firestore rules',
+          original_error:
+            error instanceof Error ? error.message : 'Unknown error',
+        },
+        null,
+        2
+      )
+    )
+    throw error
+  }
+}
+
+export const getDocumentsByCase = async (caseId: string): Promise<DocumentData[]> => {
+  let documentCount: number | undefined
+
+  try {
+    const documentsSnapshot = await adminDb
+      .collection(COLLECTIONS.DOCUMENTS)
+      .where('caseId', '==', caseId)
+      .get()
+    
+    documentCount = documentsSnapshot.size
+    return documentsSnapshot.docs.map(doc => doc.data() as DocumentData)
+  } catch (error) {
+    console.error(
+      'Failed to get documents by case:',
+      JSON.stringify(
+        {
+          error_code: 'DOCUMENTS_BY_CASE_RETRIEVAL_FAILED',
+          message: 'Failed to retrieve documents for case from Firestore',
+          service: 'Firebase Firestore',
+          operation: 'documents_by_case_retrieval',
+          context: { caseId, documentCount },
+          remediation:
+            'Verify Firebase Admin SDK permissions and Firestore rules',
+          original_error:
+            error instanceof Error ? error.message : 'Unknown error',
+        },
+        null,
+        2
+      )
+    )
+    throw error
+  }
+}
+
+export const getClientCases = async (clientId: string): Promise<string[]> => {
+  let caseCount: number | undefined
+
+  try {
+    const clientCasesSnapshot = await adminDb
+      .collection(COLLECTIONS.CLIENT_CASES)
+      .where('clientId', '==', clientId)
+      .get()
+    
+    caseCount = clientCasesSnapshot.size
+    return clientCasesSnapshot.docs.map(doc => (doc.data() as ClientCases).caseId)
+  } catch (error) {
+    console.error(
+      'Failed to get client cases:',
+      JSON.stringify(
+        {
+          error_code: 'CLIENT_CASES_RETRIEVAL_FAILED',
+          message: 'Failed to retrieve cases for client from Firestore',
+          service: 'Firebase Firestore',
+          operation: 'client_cases_retrieval',
+          context: { clientId, caseCount },
           remediation:
             'Verify Firebase Admin SDK permissions and Firestore rules',
           original_error:
