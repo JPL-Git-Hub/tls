@@ -173,26 +173,27 @@ Follow single responsibility per module pattern established in codebase.
 **Runtime errors** (user requests, API calls):
 
 - **Complete debugging context required in all errors**
-- **Service boundary error wrapping**: All external service initializations (Firebase, Stripe, Cal.com) must wrap SDK calls with try-catch blocks that provide TLS-specific context, even after centralized validation passes
+- **Service boundary error wrapping**: All external service initializations (Firebase, Stripe, Cal.com) must use structured logger functions with predefined ERROR_DEFINITIONS
 
-### JSON Structured Logging Format
+### Error Output Format
 
+Structured logger functions automatically generate this JSON format:
 ```json
 {
-  "error_code": "ATTORNEY_LOGIN_FAILED",
-  "message": "Google OAuth signin failed",
-  "service": "Firebase Auth",
-  "operation": "google_oauth_signin",
+  "error_code": "FIREBASE_CLIENT_CREATION_FAILED",
+  "message": "Failed to create client document in Firestore",
+  "service": "Firebase Firestore",
+  "operation": "client_creation",
   "context": {
-    "email": "user@example.com",
-    "domain": "example.com",
-    "userId": "user_id_if_available"
+    "clientId": "abc123",
+    "clientData": { "email": "user@example.com" }
   },
-  "remediation": "Check domain restrictions and network connectivity"
+  "remediation": "Verify Firebase Admin SDK permissions and Firestore rules",
+  "original_error": "Permission denied"
 }
 ```
 
-**Error Code Patterns**: `ATTORNEY_LOGIN_FAILED`, `USER_CLAIMS_RETRIEVAL_FAILED`, `PORTAL_CREATION_FAILED`
+**Predefined Error Codes**: `FIREBASE_CLIENT_CREATION_FAILED`, `PORTAL_CREATION_FAILED`, `AUTH_CLAIMS_VERIFICATION_FAILED`
 
 - **Service-specific error handling for Firebase/Stripe/Cal.com**
 - **Environment validation for live Firebase + ngrok development**
@@ -200,6 +201,12 @@ Follow single responsibility per module pattern established in codebase.
 
 **Error handling coverage pattern:**
 Centralized validation handles config problems, service boundary wrapping handles runtime problems.
+
+## Centralized Error Logging
+- **Required pattern**: Use predefined ERROR_DEFINITIONS from `@/lib/logging/structured-logger.ts`
+- **Service functions**: `logFirebaseError`, `logPortalError`, `logFormError`, `logApiError`, `logAuthError`
+- **Forbidden**: Manual `console.error` or `JSON.stringify` patterns
+- **Development**: Automatic error.log file writing for CC debugging
 
 ## Development Environment Strategy
 
@@ -328,29 +335,3 @@ All external service configs (Firebase, Stripe, Cal.com) validated in single cen
 ## Dependency Alignment Validation
 
 **Package.json principle**: Dependencies must align with stated architecture. Acceptable additions: implementation utilities (date-fns, lucide-react, sonner) that support core architecture without contradicting it. No alternative frameworks that duplicate architectural choices (no Redux with React built-ins, no Axios with native fetch)
-
-# FOR REVIEW: New Development Patterns
-
-## Query Performance and Index Management
-
-**Development-First Query Strategy:**
-
-- **Start with basic queries**: Use simple `where()` queries to verify data relationships and flow
-- **Add complexity incrementally**: Add `orderBy()`, `limit()`, and complex filters after data flow is confirmed
-- **Firestore composite index rule**: Any query with `where()` + `orderBy()` on different fields requires a composite index
-- **Index error decision tree**: When Firestore throws index errors, decide: create index via provided console link or sort in application code
-- **Development preference**: For small scale/development, application sorting is often simpler than managing multiple indexes
-- **Production transition**: Create proper indexes when moving to production for performance
-
-**Pattern Example:**
-```typescript
-// Start with this to verify data exists
-.where('caseId', '==', caseId)
-
-// Add this after confirming data flow works
-.where('caseId', '==', caseId)
-.orderBy('createdAt', 'desc')
-
-// If index error: either create index or sort in code
-allDocuments.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-```.

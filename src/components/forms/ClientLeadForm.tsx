@@ -5,6 +5,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { submitClientLead } from '@/lib/forms/client-submission'
+import { logFormError } from '@/lib/logging/structured-logger'
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -48,9 +49,12 @@ export default function ClientLeadForm() {
 
   const handleSubmit = async (data: ClientLeadFormData) => {
     setIsLoading(true)
+    let userEmail: string | undefined
+    let clientId: string | undefined
 
     try {
-      const clientId = await submitClientLead(data)
+      userEmail = data.email
+      clientId = await submitClientLead(data)
 
       const response = await fetch('/api/portal/create-from-lead', {
         method: 'POST',
@@ -66,10 +70,10 @@ export default function ClientLeadForm() {
         setPortalUuid(result.portalUuid)
         setIsSuccess(true)
       } else {
-        console.error('Portal creation failed:', result.error)
+        logFormError('create_portal', result.error, { clientId }, 'Portal creation failed after form submission', 'Check portal creation API and client data validity')
       }
     } catch (error) {
-      console.error('Form submission error:', error)
+      logFormError('submit_client_lead', error, { userEmail, clientId }, 'Client lead form submission failed', 'Check network connectivity and API endpoint availability')
     } finally {
       setIsLoading(false)
     }

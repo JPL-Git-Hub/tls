@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { FileText, Download, Eye, X } from 'lucide-react'
 import { DocumentData } from '@/types/schemas'
+import { logError } from '@/lib/logging/structured-logger'
 
 import 'react-pdf/dist/Page/AnnotationLayer.css'
 import 'react-pdf/dist/Page/TextLayer.css'
@@ -18,33 +19,27 @@ interface DocumentViewerProps {
 }
 
 export function DocumentViewer({ documents }: DocumentViewerProps) {
-  console.log('DocumentViewer rendering with documents:', documents.length)
   const [selectedDocument, setSelectedDocument] = useState<DocumentData | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [numPages, setNumPages] = useState<number>(0)
   const [pageNumber, setPageNumber] = useState<number>(1)
 
   const handleViewDocument = (document: DocumentData) => {
-    console.log('HANDLE VIEW DOCUMENT CALLED!')
-    console.log('Document data:', document)
-    
     if (document.fileUrl) {
-      console.log('Using stored fileUrl:', document.fileUrl)
       setSelectedDocument(document)
       setPageNumber(1) // Reset to first page
     } else {
-      console.error('No fileUrl found in document metadata')
+      logError('Document Viewer', 'view_document', 'No fileUrl found in document metadata', { documentId: document.documentId }, 'Document URL not available', 'Check document upload process and file storage')
       alert('Document URL not available. Please contact support.')
     }
   }
 
   const onDocumentLoadSuccess = ({ numPages }: { numPages: number }) => {
     setNumPages(numPages)
-    console.log('PDF loaded successfully with', numPages, 'pages')
   }
 
   const onDocumentLoadError = (error: Error) => {
-    console.error('Failed to load PDF:', error)
+    logError('Document Viewer', 'load_pdf', error, { documentId: selectedDocument?.documentId }, 'Failed to load PDF document', 'Check PDF file integrity and network connectivity')
     alert('Failed to load document')
   }
 
@@ -62,7 +57,7 @@ export function DocumentViewer({ documents }: DocumentViewerProps) {
         alert('Document URL not available. Please contact support.')
       }
     } catch (error) {
-      console.error('Failed to download document:', error)
+      logError('Document Viewer', 'download_document', error, { documentId: document.documentId, fileName: document.fileName }, 'Failed to download document', 'Check document URL and network connectivity')
       alert('Failed to download document')
     }
   }
@@ -114,7 +109,6 @@ export function DocumentViewer({ documents }: DocumentViewerProps) {
                     variant="outline"
                     size="sm"
                     onClick={(e) => {
-                      console.log('VIEW BUTTON CLICKED!')
                       e.preventDefault()
                       e.stopPropagation()
                       handleViewDocument(document)
@@ -122,7 +116,7 @@ export function DocumentViewer({ documents }: DocumentViewerProps) {
                     disabled={isLoading}
                   >
                     <Eye className="h-4 w-4 mr-1" />
-                    View [DEBUG]
+                    View
                   </Button>
                   <Button
                     variant="outline"

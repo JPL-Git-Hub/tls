@@ -1,4 +1,5 @@
 import { ClientData } from '@/types/schemas'
+import { logFormError } from '@/lib/logging/structured-logger'
 
 export async function submitClientLead(
   data: Omit<ClientData, 'clientId' | 'createdAt' | 'updatedAt'>
@@ -21,7 +22,11 @@ export async function submitClientLead(
     const result = await response.json()
     return result.clientId
   } catch (error) {
-    console.error('Client lead submission failed:', error)
+    logFormError(
+      'FORM_CLIENT_LEAD_SUBMISSION_FAILED',
+      error,
+      { email: data.email }
+    )
     throw new Error('Failed to submit client information')
   }
 }

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getCases } from '@/lib/firebase/firestore'
+import { logApiError } from '@/lib/logging/structured-logger'
 
 export async function GET() {
   let caseCount: number | undefined
@@ -14,24 +15,10 @@ export async function GET() {
       cases,
     })
   } catch (error) {
-    const errorMessage =
-      error instanceof Error ? error.message : 'Unknown error'
-    console.error(
-      'Failed to fetch cases:',
-      JSON.stringify(
-        {
-          error_code: 'CASES_LIST_RETRIEVAL_FAILED',
-          message: 'Failed to retrieve cases collection from API endpoint',
-          service: 'Firebase Firestore',
-          operation: 'cases_list_api',
-          context: { endpoint: '/api/case/list', caseCount },
-          remediation:
-            'Verify Firebase Admin SDK permissions and API authentication',
-          original_error: errorMessage,
-        },
-        null,
-        2
-      )
+    logApiError(
+      'CASES_LIST_RETRIEVAL_FAILED',
+      error,
+      { endpoint: '/api/case/list', caseCount }
     )
 
     return NextResponse.json(

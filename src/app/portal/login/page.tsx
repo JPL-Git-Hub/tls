@@ -17,6 +17,7 @@ import { signInWithGoogle } from '@/lib/firebase/auth'
 import { useRouter } from 'next/navigation'
 import { isClientRole } from '@/lib/utils/claims'
 import Link from 'next/link'
+import { logAuthError } from '@/lib/logging/structured-logger'
 
 export default function ClientLoginPage() {
   const [email, setEmail] = useState('')
@@ -28,7 +29,7 @@ export default function ClientLoginPage() {
   const authenticateUser = async (user: any) => {
     // Check custom claims for client authorization
     const idTokenResult = await user.getIdTokenResult()
-    console.log('User claims:', idTokenResult.claims)
+    // Note: User claims logged for debugging - consider removing in production
     
     if (!isClientRole(idTokenResult.claims)) {
       setError('Access denied. This login is for client portal users only.')
@@ -58,7 +59,11 @@ export default function ClientLoginPage() {
       const userCredential = await signInWithEmailAndPassword(clientAuth, email, password)
       await authenticateUser(userCredential.user)
     } catch (error) {
-      console.error('Client login failed:', error)
+      logAuthError(
+        'CLIENT_LOGIN_FAILED',
+        error,
+        { email, loginMethod: 'email_password' }
+      )
       if (error instanceof Error) {
         if (error.message.includes('user-not-found')) {
           setError('No account found with this email address.')
@@ -85,7 +90,11 @@ export default function ClientLoginPage() {
       const userCredential = await signInWithGoogle()
       await authenticateUser(userCredential.user)
     } catch (error) {
-      console.error('Google sign-in failed:', error)
+      logAuthError(
+        'GOOGLE_SIGNIN_FAILED',
+        error,
+        { loginMethod: 'google_oauth' }
+      )
       setError('Google sign-in failed. Please try again.')
     } finally {
       setIsLoading(false)

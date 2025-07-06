@@ -10,6 +10,8 @@ import {
 } from 'react'
 import { User, onAuthStateChanged, signOut } from 'firebase/auth'
 import { clientAuth } from '@/lib/firebase/client'
+import { UserClaims, isAttorneyRole } from '@/lib/utils/claims'
+import { logAuthError } from '@/lib/logging/structured-logger'
 
 interface AuthContextType {
   user: User | null
@@ -43,18 +45,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
           
           // Use Firebase custom claims for authorization instead of server-side config
           const idTokenResult = await firebaseUser.getIdTokenResult()
-          const claims = idTokenResult.claims as { role?: string }
-          setIsAttorney(claims.role === 'attorney')
+          const claims = idTokenResult.claims as UserClaims
+          setIsAttorney(isAttorneyRole(claims))
         } catch (error) {
-          console.error('Failed to get user claims:', JSON.stringify({
-            error_code: 'USER_CLAIMS_RETRIEVAL_FAILED',
-            message: 'Failed to retrieve custom claims from Firebase token',
-            service: 'Firebase Auth',
-            operation: 'get_id_token_result',
-            context: { userEmail, userId },
-            remediation: 'Check Firebase custom claims configuration and token validity',
-            original_error: error instanceof Error ? error.message : 'Unknown error'
-          }, null, 2))
+          logAuthError(
+            'AUTH_CLAIMS_VERIFICATION_FAILED',
+            error,
+            { userEmail, userId }
+          )
           setIsAttorney(false)
         }
       } else {

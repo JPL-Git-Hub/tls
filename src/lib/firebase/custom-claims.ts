@@ -1,5 +1,6 @@
 import { adminAuth } from '@/lib/firebase/admin'
 import { UserClaims } from '@/lib/utils/claims'
+import { logAuthError, logSuccess } from '@/lib/logging/structured-logger'
 
 // Set attorney role for @thelawshop.com users
 export const setAttorneyClaims = async (uid: string, email: string) => {
@@ -15,7 +16,7 @@ export const setAttorneyClaims = async (uid: string, email: string) => {
   }
 
   await adminAuth.setCustomUserClaims(uid, claims)
-  console.log(`Attorney claims set for ${email}`)
+  logSuccess('Authentication', 'set_attorney_claims', { uid, email }, `Attorney claims set for ${email}`)
 }
 
 // Set client role for portal users
@@ -27,7 +28,7 @@ export const setClientClaims = async (uid: string, portalUuid: string) => {
   }
 
   await adminAuth.setCustomUserClaims(uid, claims)
-  console.log(`Client claims set for portal ${portalUuid}`)
+  logSuccess('Authentication', 'set_client_claims', { uid, portalUuid }, `Client claims set for portal ${portalUuid}`)
 }
 
 // Verify attorney role from token
@@ -38,7 +39,7 @@ export const verifyAttorneyToken = async (
     const decodedToken = await adminAuth.verifyIdToken(idToken)
     return decodedToken.role === 'attorney'
   } catch (error) {
-    console.error('Token verification failed:', error)
+    logAuthError('verify_attorney_token', error, { tokenProvided: !!idToken }, 'Attorney token verification failed', 'Check token validity and Firebase Auth configuration')
     return false
   }
 }
@@ -56,7 +57,7 @@ export const verifyClientPortalAccess = async (
       decodedToken.portalAccess.includes(portalUuid)
     )
   } catch (error) {
-    console.error('Token verification failed:', error)
+    logAuthError('verify_client_portal_access', error, { tokenProvided: !!idToken, portalUuid }, 'Client portal access verification failed', 'Check token validity and portal access permissions')
     return false
   }
 }

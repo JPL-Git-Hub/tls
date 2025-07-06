@@ -23,3 +23,13 @@ const validateAdminConfig = () => {
 
 export const firebaseAdminConfig = validateAdminConfig()
 export const useEmulator = process.env.USE_EMULATOR === 'true'
+
+// Emulator configuration with centralized validation
+export const getEmulatorConfig = () => {
+  if (!useEmulator) return {}
+  
+  return {
+    FIRESTORE_EMULATOR_HOST: process.env.FIRESTORE_EMULATOR_HOST || 'localhost:8080',
+    FIREBASE_AUTH_EMULATOR_HOST: process.env.FIREBASE_AUTH_EMULATOR_HOST || 'localhost:9099',
+  }
+}

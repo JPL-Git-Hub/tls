@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createDocument } from '@/lib/firebase/firestore'
 import { DocumentData, DocumentType } from '@/types/schemas'
+import { logApiError } from '@/lib/logging/structured-logger'
 
 type CreateDocumentRequest = {
   caseId: string
@@ -48,31 +49,18 @@ export async function POST(request: NextRequest) {
       message: 'Document metadata created successfully',
     })
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
-    console.error(
-      'Failed to create document metadata:',
-      JSON.stringify(
-        {
-          error_code: 'DOCUMENT_METADATA_CREATION_FAILED',
-          message: 'Failed to create document metadata',
-          service: 'Firebase Firestore',
-          operation: 'document_metadata_creation',
-          context: {
-            documentData: documentData
-              ? {
-                  caseId: documentData.caseId,
-                  fileName: documentData.fileName,
-                  docType: documentData.docType,
-                }
-              : undefined,
-          },
-          remediation:
-            'Verify Firebase Admin SDK permissions and document data format',
-          original_error: errorMessage,
-        },
-        null,
-        2
-      )
+    logApiError(
+      'DOCUMENT_METADATA_CREATION_FAILED',
+      error,
+      {
+        documentData: documentData
+          ? {
+              caseId: documentData.caseId,
+              fileName: documentData.fileName,
+              docType: documentData.docType,
+            }
+          : undefined,
+      }
     )
 
     return NextResponse.json(

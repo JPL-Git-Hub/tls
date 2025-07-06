@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { setClientClaims } from '@/lib/firebase/custom-claims'
+import { logApiError } from '@/lib/logging/structured-logger'
 
 export async function POST(request: NextRequest) {
   let uid: string | undefined
@@ -25,22 +26,10 @@ export async function POST(request: NextRequest) {
       message: 'Client claims set successfully',
     })
   } catch (error) {
-    console.error(
-      'Failed to set client claims:',
-      JSON.stringify(
-        {
-          error_code: 'CUSTOM_CLAIMS_SET_FAILED',
-          message: 'Failed to set custom claims for client user',
-          service: 'Firebase Admin Auth',
-          operation: 'set_custom_user_claims',
-          context: { uid, portalUuid },
-          remediation: 'Verify Firebase Admin SDK permissions and user exists',
-          original_error:
-            error instanceof Error ? error.message : 'Unknown error',
-        },
-        null,
-        2
-      )
+    logApiError(
+      'CUSTOM_CLAIMS_SET_FAILED',
+      error,
+      { uid, portalUuid }
     )
 
     return NextResponse.json(

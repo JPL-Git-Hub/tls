@@ -20,5 +20,5 @@ echo "🗑️  Clearing Next.js cache..."
 rm -rf .next 2>/dev/null || true
 
 echo "🚀 Starting fresh development server..."
-# Start npm run dev (this will also start ngrok via concurrently)
-npm run dev
+# Set NODE_ENV=development and start npm run dev (this will also start ngrok via concurrently)
+NODE_ENV=development npm run dev

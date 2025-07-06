@@ -24,8 +24,8 @@ echo "⏳ Waiting for emulators to initialize..."
 sleep 5
 
 echo "🚀 Starting development server with emulators..."
-# Set USE_EMULATOR environment variable and start development
-USE_EMULATOR=true npm run dev
+# Set environment variables and start development
+NODE_ENV=development USE_EMULATOR=true npm run dev
 
 # Cleanup function
 cleanup() {

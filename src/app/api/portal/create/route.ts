@@ -7,6 +7,7 @@ import {
   RegistrationStatus,
 } from '@/types/schemas'
 import { randomUUID } from 'crypto'
+import { logPortalError } from '@/lib/logging/structured-logger'
 
 type CreatePortalRequest = Pick<PortalData, 'clientId'>
 
@@ -76,23 +77,10 @@ export async function POST(request: NextRequest) {
       message: 'Portal created successfully',
     })
   } catch (error) {
-    console.error(
-      'Failed to create portal:',
-      JSON.stringify(
-        {
-          error_code: 'PORTAL_CREATION_FAILED',
-          message: 'Failed to create portal for client',
-          service: 'Firebase Firestore',
-          operation: 'portal_creation',
-          context: { clientId, portalUuid },
-          remediation:
-            'Verify client exists and Firebase Admin SDK permissions',
-          original_error:
-            error instanceof Error ? error.message : 'Unknown error',
-        },
-        null,
-        2
-      )
+    logPortalError(
+      'PORTAL_CREATION_FAILED',
+      error,
+      { clientId, portalUuid }
     )
 
     return NextResponse.json(

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { updatePortal } from '@/lib/firebase/firestore'
 import { PortalData } from '@/types/schemas'
+import { logApiError } from '@/lib/logging/structured-logger'
 
 type UpdateRegistrationStatusRequest = Pick<PortalData, 'portalUuid'>
 
@@ -20,8 +21,8 @@ export async function POST(request: NextRequest) {
 
     // Update portal registration status to completed and set portal to active
     await updatePortal(portalUuid, {
-      registrationStatus: 'completed',
-      portalStatus: 'active',
+      registrationStatus: 'completed' satisfies PortalData['registrationStatus'],
+      portalStatus: 'active' satisfies PortalData['portalStatus'],
     })
 
     return NextResponse.json({
@@ -29,24 +30,7 @@ export async function POST(request: NextRequest) {
       message: 'Registration status updated to completed',
     })
   } catch (error) {
-    console.error(
-      'Update registration status failed:',
-      JSON.stringify(
-        {
-          error_code: 'PORTAL_STATUS_UPDATE_FAILED',
-          message: 'Failed to update portal registration status',
-          service: 'Firebase Firestore',
-          operation: 'portal_status_update',
-          context: { portalUuid },
-          remediation:
-            'Check if portal document exists and updatePortal function is working',
-          original_error:
-            error instanceof Error ? error.message : 'Unknown error',
-        },
-        null,
-        2
-      )
-    )
+    logApiError('portal_status_update', error, { portalUuid }, 'Failed to update portal registration status', 'Check if portal document exists and updatePortal function is working')
 
     return NextResponse.json(
       {

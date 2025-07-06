@@ -14,6 +14,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { DocumentViewer } from '@/components/ui/document-viewer'
 import { DocumentData } from '@/types/schemas'
+import { logPortalError } from '@/lib/logging/structured-logger'
 
 export default function PortalDashboardPage() {
   const params = useParams()
@@ -31,11 +32,11 @@ export default function PortalDashboardPage() {
         if (data.success) {
           setDocuments(data.documents)
         } else {
-          console.error('Failed to fetch documents:', data.error)
+          logPortalError('fetch_documents', data.error, { portalUuid: uuid }, 'Failed to fetch documents for portal', 'Check portal UUID validity and document permissions')
           setDocuments([])
         }
       } catch (error) {
-        console.error('Error fetching documents:', error)
+        logPortalError('fetch_documents_network', error, { portalUuid: uuid }, 'Network error while fetching portal documents', 'Check network connectivity and API endpoint availability')
         setDocuments([])
       } finally {
         setIsLoading(false)
@@ -50,7 +51,7 @@ export default function PortalDashboardPage() {
       await signOut(clientAuth)
       router.push('/')
     } catch (error) {
-      console.error('Sign out error:', error)
+      logPortalError('sign_out', error, { portalUuid: uuid }, 'Portal sign out failed', 'Check Firebase Auth configuration and network connectivity')
     }
   }
 

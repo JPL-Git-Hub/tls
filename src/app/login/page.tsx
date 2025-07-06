@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/card'
 import { signInWithGoogle } from '@/lib/firebase/auth'
 import { useRouter } from 'next/navigation'
+import { logAuthError } from '@/lib/logging/structured-logger'
 
 export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false)
@@ -30,27 +31,22 @@ export default function LoginPage() {
       const claims = idTokenResult.claims as { role?: string }
 
       if (claims.role !== 'attorney') {
-        console.error(
-          'Attorney authorization failed - custom claims check:',
-          user.email
-        )
+        logAuthError('attorney_authorization', 'Attorney claims not found', { userEmail }, 'Attorney authorization failed - custom claims check', 'Check custom claims configuration for attorney role')
         return
       }
 
       router.push('/admin')
     } catch (error) {
-      console.error('Attorney login failed:', JSON.stringify({
-        error_code: 'ATTORNEY_LOGIN_FAILED',
-        message: 'Failed to authenticate attorney via Google OAuth',
-        service: 'Firebase Auth',
-        operation: 'google_oauth_signin',
-        context: { 
+      logAuthError(
+        'attorney_login',
+        error,
+        { 
           email: userEmail,
           domain_check: userEmail?.endsWith('@thelawshop.com')
         },
-        remediation: 'Verify Google OAuth configuration and domain restrictions',
-        original_error: error instanceof Error ? error.message : 'Unknown error'
-      }, null, 2))
+        'Failed to authenticate attorney via Google OAuth',
+        'Verify Google OAuth configuration and domain restrictions'
+      )
     } finally {
       setIsLoading(false)
     }

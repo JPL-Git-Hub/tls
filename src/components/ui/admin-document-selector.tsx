@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/select'
 import { FileText, Download, Eye, Folder } from 'lucide-react'
 import { CaseData, DocumentData } from '@/types/schemas'
+import { logApiError, logError } from '@/lib/logging/structured-logger'
 
 interface AdminDocumentSelectorProps {
   cases: CaseData[]
@@ -41,11 +42,19 @@ export function AdminDocumentSelector({ cases }: AdminDocumentSelectorProps) {
       if (data.success) {
         setDocuments(data.documents)
       } else {
-        console.error('Failed to fetch documents:', data.error)
+        logApiError(
+          'DOCUMENTS_FETCH_FAILED',
+          new Error(data.error),
+          { caseId, apiError: data.error }
+        )
         setDocuments([])
       }
     } catch (error) {
-      console.error('Error fetching documents:', error)
+      logApiError(
+        'DOCUMENTS_FETCH_FAILED',
+        error,
+        { caseId }
+      )
       setDocuments([])
     } finally {
       setIsLoading(false)
@@ -61,7 +70,15 @@ export function AdminDocumentSelector({ cases }: AdminDocumentSelectorProps) {
       // Open document in new tab
       window.open(downloadURL, '_blank')
     } catch (error) {
-      console.error('Failed to get download URL:', error)
+      logError(
+        'DOCUMENT_DOWNLOAD_URL_FAILED',
+        error,
+        {
+          documentId: document.documentId,
+          fileName: document.fileName,
+          caseId: document.caseId
+        }
+      )
       alert('Failed to load document')
     }
   }
@@ -79,7 +96,15 @@ export function AdminDocumentSelector({ cases }: AdminDocumentSelectorProps) {
       link.click()
       document.body.removeChild(link)
     } catch (error) {
-      console.error('Failed to download document:', error)
+      logError(
+        'DOCUMENT_DOWNLOAD_FAILED',
+        error,
+        {
+          documentId: document.documentId,
+          fileName: document.fileName,
+          caseId: document.caseId
+        }
+      )
       alert('Failed to download document')
     }
   }

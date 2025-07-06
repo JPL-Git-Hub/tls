@@ -1,13 +1,14 @@
 import * as admin from 'firebase-admin'
 import * as functions from 'firebase-functions'
 import { onDocumentUpdated } from 'firebase-functions/v2/firestore'
+import { COLLECTIONS } from '../../src/types/schemas'
 
 if (admin.apps.length === 0) {
   admin.initializeApp()
 }
 
 export const syncClientName = onDocumentUpdated(
-  'clients/{clientId}',
+  `${COLLECTIONS.CLIENTS}/{clientId}`,
   async event => {
     const before = event.data?.before.data()
     const after = event.data?.after.data()
@@ -30,7 +31,7 @@ export const syncClientName = onDocumentUpdated(
 
       const snapshot = await admin
         .firestore()
-        .collection('portals')
+        .collection(COLLECTIONS.PORTALS)
         .where('clientId', '==', event.params.clientId)
         .get()
 

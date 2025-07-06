@@ -2,8 +2,9 @@ import { initializeApp, getApps, cert, App } from 'firebase-admin/app'
 import { getAuth } from 'firebase-admin/auth'
 import { getFirestore } from 'firebase-admin/firestore'
 import { getStorage } from 'firebase-admin/storage'
-import { firebaseAdminConfig, useEmulator } from '@/lib/config/firebase-config'
+import { firebaseAdminConfig, useEmulator, getEmulatorConfig } from '@/lib/config/firebase-config'
 import { verifyAttorneyToken } from '@/lib/firebase/custom-claims'
+import { logFirebaseError } from '@/lib/logging/structured-logger'
 
 // Initialize Firebase Admin app with singleton pattern
 const getAdminApp = (): App => {
@@ -37,12 +38,7 @@ export const adminStorage = getStorage(adminApp)
 // Configure emulators using centralized pattern
 const configureEmulators = () => {
   if (useEmulator) {
-    const emulatorConfig = {
-      FIRESTORE_EMULATOR_HOST:
-        process.env.FIRESTORE_EMULATOR_HOST || 'localhost:8080',
-      FIREBASE_AUTH_EMULATOR_HOST:
-        process.env.FIREBASE_AUTH_EMULATOR_HOST || 'localhost:9099',
-    }
+    const emulatorConfig = getEmulatorConfig()
 
     Object.entries(emulatorConfig).forEach(([key, value]) => {
       process.env[key] = value
@@ -63,23 +59,12 @@ export const verifyIdToken = async (
       email: decodedToken.email || '',
     }
   } catch (error) {
-    console.error(
-      'Firebase token verification failed:',
-      JSON.stringify(
-        {
-          error_code: 'TOKEN_VERIFICATION_FAILED',
-          message: 'Failed to verify Firebase ID token',
-          service: 'Firebase Admin Auth',
-          operation: 'verify_id_token',
-          context: { token_provided: !!idToken, token_length: idToken?.length },
-          remediation:
-            'Check token format, expiration, and Firebase project configuration',
-          original_error:
-            error instanceof Error ? error.message : 'Unknown error',
-        },
-        null,
-        2
-      )
+    logFirebaseError(
+      'verify_id_token', 
+      error, 
+      { token_provided: !!idToken, token_length: idToken?.length },
+      'Failed to verify Firebase ID token',
+      'Check token format, expiration, and Firebase project configuration'
     )
     return null
   }

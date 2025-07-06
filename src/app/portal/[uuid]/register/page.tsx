@@ -4,6 +4,7 @@ import { useParams, useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { createUserWithEmailAndPassword } from 'firebase/auth'
 import { clientAuth } from '@/lib/firebase/client'
+import { logPortalError, logAuthError, logSuccess } from '@/lib/logging/structured-logger'
 import {
   Card,
   CardContent,
@@ -26,12 +27,12 @@ export default function PortalRegisterPage() {
     e.preventDefault()
 
     if (!email || !password) {
-      console.error('Email and password are required')
+      logPortalError('validate_registration_form', 'Missing email or password', { portalUuid: uuid, hasEmail: !!email, hasPassword: !!password }, 'Email and password are required for registration', 'Ensure both email and password fields are filled')
       return
     }
 
     if (password.length < 6) {
-      console.error('Password must be at least 6 characters')
+      logPortalError('validate_password_length', 'Password too short', { portalUuid: uuid, passwordLength: password.length }, 'Password must be at least 6 characters long', 'Use a password with at least 6 characters')
       return
     }
 
@@ -41,7 +42,7 @@ export default function PortalRegisterPage() {
         email,
         password
       )
-      console.log('User created:', userCredential.user.uid)
+      logSuccess('Portal Registration', 'create_user', { portalUuid: uuid, userId: userCredential.user.uid }, 'New user successfully created for portal')
 
       // Update portal registration status to completed
       const response = await fetch('/api/portal/update-registration-status', {
@@ -55,7 +56,7 @@ export default function PortalRegisterPage() {
       })
 
       if (!response.ok) {
-        console.error('Failed to update registration status')
+        logPortalError('update_registration_status', 'API response not ok', { portalUuid: uuid, responseStatus: response.status }, 'Failed to update portal registration status to completed', 'Check API endpoint and portal UUID validity')
       }
 
       // Set custom claims for the new client user
@@ -71,12 +72,12 @@ export default function PortalRegisterPage() {
       })
 
       if (!claimsResponse.ok) {
-        console.error('Failed to set client claims')
+        logAuthError('set_client_claims', 'API response not ok', { portalUuid: uuid, userId: userCredential.user.uid, responseStatus: claimsResponse.status }, 'Failed to set custom claims for new client user', 'Check custom claims API and user permissions')
       }
 
       router.push(`/portal/${uuid}`)
     } catch (error) {
-      console.error('Registration error:', error)
+      logPortalError('register_client_user', error, { portalUuid: uuid, email }, 'Portal registration process failed', 'Check network connectivity and Firebase Auth configuration')
     }
   }
 
