@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/card'
 import { signInWithGoogle } from '@/lib/firebase/auth'
 import { useRouter } from 'next/navigation'
-import { logAuthError } from '@/lib/logging/structured-logger'
+import { logAuthError } from '@/lib/client-error-logger'
 
 export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false)
@@ -31,13 +31,13 @@ export default function LoginPage() {
       const claims = idTokenResult.claims as { role?: string }
 
       if (claims.role !== 'attorney') {
-        logAuthError('attorney_authorization', 'Attorney claims not found', { userEmail }, 'Attorney authorization failed - custom claims check', 'Check custom claims configuration for attorney role')
+        logClientError('attorney_authorization', 'Attorney claims not found', { userEmail }, 'Attorney authorization failed - custom claims check', 'Check custom claims configuration for attorney role')
         return
       }
 
       router.push('/admin')
     } catch (error) {
-      logAuthError(
+      logClientError(
         'attorney_login',
         error,
         { 

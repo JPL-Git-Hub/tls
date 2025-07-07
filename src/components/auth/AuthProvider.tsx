@@ -11,7 +11,7 @@ import {
 import { User, onAuthStateChanged, signOut } from 'firebase/auth'
 import { clientAuth } from '@/lib/firebase/client'
 import { UserClaims, isAttorneyRole } from '@/lib/utils/claims'
-import { logAuthError } from '@/lib/logging/structured-logger'
+import { logAuthError } from '@/lib/client-error-logger'
 
 interface AuthContextType {
   user: User | null
@@ -48,7 +48,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
           const claims = idTokenResult.claims as UserClaims
           setIsAttorney(isAttorneyRole(claims))
         } catch (error) {
-          logAuthError(
+          logClientError(
             'AUTH_CLAIMS_VERIFICATION_FAILED',
             error,
             { userEmail, userId }

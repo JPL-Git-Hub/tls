@@ -1,18 +1,27 @@
 'use client'
 
 import { useState } from 'react'
-import { Document, Page, pdfjs } from 'react-pdf'
+import dynamic from 'next/dynamic'
+
+// Dynamically import react-pdf to prevent SSR issues
+const Document = dynamic(() => import('react-pdf').then(mod => ({ default: mod.Document })), { ssr: false })
+const Page = dynamic(() => import('react-pdf').then(mod => ({ default: mod.Page })), { ssr: false })
+
+// Import pdfjs only on client side
+let pdfjs: any
+if (typeof window !== 'undefined') {
+  pdfjs = require('react-pdf').pdfjs
+  pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`
+}
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { FileText, Download, Eye, X } from 'lucide-react'
 import { DocumentData } from '@/types/schemas'
-import { logError } from '@/lib/logging/structured-logger'
+import { logError } from '@/lib/client-error-logger'
 
 import 'react-pdf/dist/Page/AnnotationLayer.css'
 import 'react-pdf/dist/Page/TextLayer.css'
 
-// Set up PDF.js worker
-pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`
 
 interface DocumentViewerProps {
   documents: DocumentData[]

@@ -17,7 +17,7 @@ import { signInWithGoogle } from '@/lib/firebase/auth'
 import { useRouter } from 'next/navigation'
 import { isClientRole } from '@/lib/utils/claims'
 import Link from 'next/link'
-import { logAuthError } from '@/lib/logging/structured-logger'
+import { logClientError } from '@/lib/client-error-logger'
 
 export default function ClientLoginPage() {
   const [email, setEmail] = useState('')
@@ -59,11 +59,7 @@ export default function ClientLoginPage() {
       const userCredential = await signInWithEmailAndPassword(clientAuth, email, password)
       await authenticateUser(userCredential.user)
     } catch (error) {
-      logAuthError(
-        'CLIENT_LOGIN_FAILED',
-        error,
-        { email, loginMethod: 'email_password' }
-      )
+      logClientError(error, { operation: 'CLIENT_LOGIN_FAILED', email, loginMethod: 'email_password' })
       if (error instanceof Error) {
         if (error.message.includes('user-not-found')) {
           setError('No account found with this email address.')
@@ -90,11 +86,7 @@ export default function ClientLoginPage() {
       const userCredential = await signInWithGoogle()
       await authenticateUser(userCredential.user)
     } catch (error) {
-      logAuthError(
-        'GOOGLE_SIGNIN_FAILED',
-        error,
-        { loginMethod: 'google_oauth' }
-      )
+      logClientError(error, { operation: 'GOOGLE_SIGNIN_FAILED', loginMethod: 'google_oauth' })
       setError('Google sign-in failed. Please try again.')
     } finally {
       setIsLoading(false)

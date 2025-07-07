@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/select'
 import { FileText, Download, Eye, Folder } from 'lucide-react'
 import { CaseData, DocumentData } from '@/types/schemas'
-import { logApiError, logError } from '@/lib/logging/structured-logger'
+import { logApiError, logError } from '@/lib/client-error-logger'
 
 interface AdminDocumentSelectorProps {
   cases: CaseData[]
@@ -42,7 +42,7 @@ export function AdminDocumentSelector({ cases }: AdminDocumentSelectorProps) {
       if (data.success) {
         setDocuments(data.documents)
       } else {
-        logApiError(
+        logClientError(
           'DOCUMENTS_FETCH_FAILED',
           new Error(data.error),
           { caseId, apiError: data.error }
@@ -50,7 +50,7 @@ export function AdminDocumentSelector({ cases }: AdminDocumentSelectorProps) {
         setDocuments([])
       }
     } catch (error) {
-      logApiError(
+      logClientError(
         'DOCUMENTS_FETCH_FAILED',
         error,
         { caseId }

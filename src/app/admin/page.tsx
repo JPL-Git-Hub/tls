@@ -25,7 +25,7 @@ import { clientAuth } from '@/lib/firebase/client'
 import { uploadDocument } from '@/lib/firebase/storage'
 import { CaseData, DocumentData } from '@/types/schemas'
 import { isAttorneyRole } from '@/lib/utils/claims'
-import { logAuthError, logApiError, logSuccess } from '@/lib/logging/structured-logger'
+import { logClientError } from '@/lib/client-error-logger'
 
 export default function AdminPage() {
   const [user, setUser] = useState<User | null>(null)
@@ -52,12 +52,12 @@ export default function AdminPage() {
         const idTokenResult = await user.getIdTokenResult()
 
         if (!isAttorneyRole(idTokenResult.claims)) {
-          logAuthError('verify_attorney_claims', 'Attorney claims not found', { userEmail: user.email }, 'Admin access denied - attorney claims not found', 'Check custom claims configuration for attorney role')
+          logClientError(new Error('Attorney claims not found'), { operation: 'verify_attorney_claims', userEmail: user.email })
           router.push('/login')
           return
         }
       } catch (error) {
-        logAuthError('verify_attorney_claims', error, { userEmail: user.email }, 'Failed to verify attorney claims', 'Check Firebase Auth configuration and custom claims setup')
+        logClientError(error, { operation: 'verify_attorney_claims', userEmail: user.email })
         router.push('/login')
         return
       }
@@ -78,10 +78,10 @@ export default function AdminPage() {
         if (data.success) {
           setCases(data.cases)
         } else {
-          logApiError('fetch_cases', data.error, {}, 'Failed to fetch cases from API', 'Check API endpoint and authentication')
+          logClientError(new Error(data.error), { operation: 'fetch_cases' })
         }
       } catch (error) {
-        logApiError('fetch_cases', error, {}, 'Error fetching cases', 'Check network connectivity and API availability')
+        logClientError(error, { operation: 'fetch_cases' })
       } finally {
         setCasesLoading(false)
       }
@@ -112,7 +112,7 @@ export default function AdminPage() {
       await signOut(clientAuth)
       router.push('/login')
     } catch (error) {
-      logAuthError('sign_out', error, { userEmail: user?.email }, 'Admin sign out failed', 'Check Firebase Auth configuration')
+      logClientError(error, { operation: 'sign_out', userEmail: user?.email })
     }
   }
 
@@ -139,13 +139,13 @@ export default function AdminPage() {
       const metadataResult = await metadataResponse.json()
       
       if (metadataResult.success) {
-        logSuccess('Admin', 'document_upload', { caseId, fileName: file.name, documentId: metadataResult.documentId }, 'Document uploaded and metadata created successfully')
+        console.log('Document upload success:', { operation: 'document_upload', caseId, fileName: file.name, documentId: metadataResult.documentId })
         alert('Document uploaded successfully!')
       } else {
         throw new Error(metadataResult.error || 'Failed to create document metadata')
       }
     } catch (error) {
-      logApiError('document_upload', error, { caseId, fileName: file.name }, 'Failed to upload document', 'Check file permissions and network connectivity')
+      logClientError(error, { operation: 'document_upload', caseId, fileName: file.name })
       alert('Failed to upload document: ' + (error instanceof Error ? error.message : 'Unknown error'))
     } finally {
       setIsUploading(false)

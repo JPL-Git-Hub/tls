@@ -1,6 +1,6 @@
 import { clientStorage } from '@/lib/firebase/client'
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
-import { logFirebaseError } from '@/lib/logging/structured-logger'
+import { logClientError } from '@/lib/client-error-logger'
 
 // Client-side Storage operations using Firebase SDK
 // Used in React components and client-side logic
@@ -22,19 +22,14 @@ export const uploadDocument = async (
 
     return downloadURL
   } catch (error) {
-    logFirebaseError(
-      'document_upload',
-      error,
-      {
-        caseId,
-        fileName,
-        filePath,
-        fileSize: file?.size,
-        fileType: file?.type,
-      },
-      'Failed to upload document to Firebase Storage',
-      'Verify Firebase Storage rules, file permissions, and storage bucket configuration'
-    )
+    logClientError(error, {
+      operation: 'document_upload',
+      caseId,
+      fileName,
+      filePath,
+      fileSize: file?.size,
+      fileType: file?.type,
+    })
     throw error
   }
 }
