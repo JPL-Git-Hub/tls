@@ -10,8 +10,7 @@ import { Button } from '@/catalyst/components/button'
 import { Heading } from '@/catalyst/components/heading'
 import { Text } from '@/catalyst/components/text'
 import { Input } from '@/catalyst/components/input'
-import { Field, Fieldset, FieldGroup } from '@/catalyst/components/fieldset'
-import * as Headless from '@headlessui/react'
+import { Field, Fieldset, FieldGroup, Label } from '@/catalyst/components/fieldset'
 
 const clientLeadSchema = z.object({
   firstName: z.string().min(1, 'First name is required'),
@@ -119,9 +118,9 @@ export default function ClientLeadForm() {
           <Fieldset>
             <FieldGroup>
               <Field>
-                <Headless.Label className="text-sm font-medium text-gray-900">
+                <Label>
                   First Name
-                </Headless.Label>
+                </Label>
                 <Input
                   {...register('firstName')}
                   type="text"
@@ -136,9 +135,9 @@ export default function ClientLeadForm() {
               </Field>
 
               <Field>
-                <Headless.Label className="text-sm font-medium text-gray-900">
+                <Label>
                   Last Name
-                </Headless.Label>
+                </Label>
                 <Input
                   {...register('lastName')}
                   type="text"
@@ -153,9 +152,9 @@ export default function ClientLeadForm() {
               </Field>
 
               <Field>
-                <Headless.Label className="text-sm font-medium text-gray-900">
+                <Label>
                   Email
-                </Headless.Label>
+                </Label>
                 <Input
                   {...register('email')}
                   type="email"
@@ -170,9 +169,9 @@ export default function ClientLeadForm() {
               </Field>
 
               <Field>
-                <Headless.Label className="text-sm font-medium text-gray-900">
+                <Label>
                   Phone Number
-                </Headless.Label>
+                </Label>
                 <Input
                   {...register('mobilePhone')}
                   type="tel"
