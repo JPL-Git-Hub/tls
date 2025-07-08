@@ -1,17 +1,12 @@
 'use client'
 
 import { useState } from 'react'
-import { Button } from '@/components/ui/button'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
+import { Button } from '@/catalyst/components/button'
+import { Heading } from '@/catalyst/components/heading'
+import { Text } from '@/catalyst/components/text'
 import { signInWithGoogle } from '@/lib/firebase/auth'
 import { useRouter } from 'next/navigation'
-import { logAuthError } from '@/lib/client-error-logger'
+import { logClientError } from '@/lib/client-error-logger'
 
 export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false)
@@ -31,21 +26,22 @@ export default function LoginPage() {
       const claims = idTokenResult.claims as { role?: string }
 
       if (claims.role !== 'attorney') {
-        logClientError('attorney_authorization', 'Attorney claims not found', { userEmail }, 'Attorney authorization failed - custom claims check', 'Check custom claims configuration for attorney role')
+        logClientError(
+          new Error('Attorney claims not found'),
+          { userEmail, operation: 'attorney_authorization' }
+        )
         return
       }
 
-      router.push('/admin')
+      router.push('/dashboard')
     } catch (error) {
       logClientError(
-        'attorney_login',
         error,
         { 
           email: userEmail,
-          domain_check: userEmail?.endsWith('@thelawshop.com')
-        },
-        'Failed to authenticate attorney via Google OAuth',
-        'Verify Google OAuth configuration and domain restrictions'
+          domain_check: userEmail?.endsWith('@thelawshop.com'),
+          operation: 'attorney_login'
+        }
       )
     } finally {
       setIsLoading(false)
@@ -53,25 +49,35 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-8 bg-background">
-      <Card className="w-full max-w-md mx-auto">
-        <CardHeader>
-          <CardTitle>Attorney Login</CardTitle>
-          <CardDescription>
-            Sign in with your @thelawshop.com Google account
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
+    <div className="min-h-screen flex items-center justify-center p-8 bg-gray-50">
+      <div className="w-full max-w-md mx-auto bg-white rounded-xl shadow-sm ring-1 ring-gray-950/5 p-8">
+        <div className="text-center space-y-6">
+          {/* Header */}
+          <div className="space-y-2">
+            <Heading level={2} className="text-2xl font-bold text-indigo-600">
+              Attorney Login
+            </Heading>
+            <Text className="text-gray-600">
+              Sign in with your @thelawshop.com Google account
+            </Text>
+          </div>
+
+          {/* Login Button */}
           <Button
             onClick={handleGoogleSignIn}
             disabled={isLoading}
-            className="w-full"
-            variant="outline"
+            color="indigo"
+            className="w-full h-12 text-base"
           >
             {isLoading ? 'Signing in...' : 'Continue with Google'}
           </Button>
-        </CardContent>
-      </Card>
+
+          {/* Footer */}
+          <Text className="text-sm text-gray-500">
+            Access the attorney dashboard and case management system
+          </Text>
+        </div>
+      </div>
     </div>
   )
 }
