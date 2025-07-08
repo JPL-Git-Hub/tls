@@ -225,7 +225,7 @@ export default function Dashboard() {
         </div>
 
         <div className="lg:pl-72">
-          <div className="sticky top-0 z-40 flex h-16 shrink-0 items-center gap-x-4 border-b border-gray-200 bg-white px-4 shadow-xs sm:gap-x-6 sm:px-6 lg:px-8">
+          <div className="sticky top-0 z-40 flex h-16 shrink-0 items-center gap-x-4 border-b border-gray-200 bg-white px-4 shadow-2xs sm:gap-x-6 sm:px-6 lg:px-8">
             <button type="button" onClick={() => setSidebarOpen(true)} className="-m-2.5 p-2.5 text-gray-700 lg:hidden">
               <span className="sr-only">Open sidebar</span>
               <Bars3Icon aria-hidden="true" className="size-6" />
@@ -307,10 +307,10 @@ export default function Dashboard() {
               </div>
               
               <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-                <div className="bg-white overflow-hidden shadow rounded-lg">
+                <div className="bg-white overflow-hidden shadow-sm rounded-lg">
                   <div className="p-5">
                     <div className="flex items-center">
-                      <div className="flex-shrink-0">
+                      <div className="shrink-0">
                         <FolderIcon className="h-6 w-6 text-gray-400" />
                       </div>
                       <div className="ml-5 w-0 flex-1">
@@ -327,10 +327,10 @@ export default function Dashboard() {
                   </div>
                 </div>
 
-                <div className="bg-white overflow-hidden shadow rounded-lg">
+                <div className="bg-white overflow-hidden shadow-sm rounded-lg">
                   <div className="p-5">
                     <div className="flex items-center">
-                      <div className="flex-shrink-0">
+                      <div className="shrink-0">
                         <UsersIcon className="h-6 w-6 text-gray-400" />
                       </div>
                       <div className="ml-5 w-0 flex-1">
@@ -347,10 +347,10 @@ export default function Dashboard() {
                   </div>
                 </div>
 
-                <div className="bg-white overflow-hidden shadow rounded-lg">
+                <div className="bg-white overflow-hidden shadow-sm rounded-lg">
                   <div className="p-5">
                     <div className="flex items-center">
-                      <div className="flex-shrink-0">
+                      <div className="shrink-0">
                         <DocumentDuplicateIcon className="h-6 w-6 text-gray-400" />
                       </div>
                       <div className="ml-5 w-0 flex-1">

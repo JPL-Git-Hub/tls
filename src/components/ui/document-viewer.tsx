@@ -17,7 +17,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { FileText, Download, Eye, X } from 'lucide-react'
 import { DocumentData } from '@/types/schemas'
-import { logError } from '@/lib/client-error-logger'
+import { logClientError } from '@/lib/client-error-logger'
 
 import 'react-pdf/dist/Page/AnnotationLayer.css'
 import 'react-pdf/dist/Page/TextLayer.css'
@@ -38,7 +38,10 @@ export function DocumentViewer({ documents }: DocumentViewerProps) {
       setSelectedDocument(document)
       setPageNumber(1) // Reset to first page
     } else {
-      logError('Document Viewer', 'view_document', 'No fileUrl found in document metadata', { documentId: document.documentId }, 'Document URL not available', 'Check document upload process and file storage')
+      logClientError(
+        new Error('No fileUrl found in document metadata'),
+        { documentId: document.documentId, operation: 'view_document' }
+      )
       alert('Document URL not available. Please contact support.')
     }
   }
@@ -48,7 +51,10 @@ export function DocumentViewer({ documents }: DocumentViewerProps) {
   }
 
   const onDocumentLoadError = (error: Error) => {
-    logError('Document Viewer', 'load_pdf', error, { documentId: selectedDocument?.documentId }, 'Failed to load PDF document', 'Check PDF file integrity and network connectivity')
+    logClientError(
+      error,
+      { documentId: selectedDocument?.documentId, operation: 'load_pdf' }
+    )
     alert('Failed to load document')
   }
 
@@ -66,7 +72,10 @@ export function DocumentViewer({ documents }: DocumentViewerProps) {
         alert('Document URL not available. Please contact support.')
       }
     } catch (error) {
-      logError('Document Viewer', 'download_document', error, { documentId: document.documentId, fileName: document.fileName }, 'Failed to download document', 'Check document URL and network connectivity')
+      logClientError(
+        error,
+        { documentId: document.documentId, fileName: document.fileName, operation: 'download_document' }
+      )
       alert('Failed to download document')
     }
   }

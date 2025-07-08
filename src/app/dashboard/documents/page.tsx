@@ -173,7 +173,7 @@ export default function DocumentsPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="bg-white shadow">
+      <div className="bg-white shadow-sm">
         <div className="px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-6">
             <div>
@@ -184,7 +184,7 @@ export default function DocumentsPage() {
             </div>
             <button
               onClick={() => setIsUploadOpen(true)}
-              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
             >
               <PlusIcon className="h-4 w-4 mr-2" />
               Upload Document
@@ -200,7 +200,7 @@ export default function DocumentsPage() {
             
             {/* Case Selector Sidebar */}
             <div className="lg:col-span-1">
-              <div className="bg-white overflow-hidden shadow rounded-lg">
+              <div className="bg-white overflow-hidden shadow-sm rounded-lg">
                 <div className="px-4 py-5 sm:p-6">
                   <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">
                     Select Case
@@ -233,7 +233,7 @@ export default function DocumentsPage() {
 
             {/* Documents List */}
             <div className="lg:col-span-3">
-              <div className="bg-white shadow rounded-lg">
+              <div className="bg-white shadow-sm rounded-lg">
                 <div className="px-4 py-5 sm:p-6">
                   <div className="flex justify-between items-center mb-6">
                     <h3 className="text-lg leading-6 font-medium text-gray-900">
@@ -255,7 +255,7 @@ export default function DocumentsPage() {
                           placeholder="Search documents..."
                           value={searchTerm}
                           onChange={(e) => setSearchTerm(e.target.value)}
-                          className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                          className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-hidden focus:placeholder-gray-400 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                         />
                       </div>
                     )}
@@ -297,12 +297,12 @@ export default function DocumentsPage() {
                               
                               <Menu as="div" className="relative inline-block text-left">
                                 <div>
-                                  <MenuButton className="inline-flex w-full justify-center gap-x-1.5 rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">
+                                  <MenuButton className="inline-flex w-full justify-center gap-x-1.5 rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-xs ring-1 ring-inset ring-gray-300 hover:bg-gray-50">
                                     <EllipsisVerticalIcon className="h-5 w-5" />
                                   </MenuButton>
                                 </div>
 
-                                <MenuItems className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                                <MenuItems className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-hidden">
                                   <div className="py-1">
                                     <MenuItem>
                                       <button
@@ -362,7 +362,7 @@ export default function DocumentsPage() {
                 <button
                   type="button"
                   onClick={() => setIsUploadOpen(false)}
-                  className="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto"
+                  className="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-xs ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto"
                 >
                   Close
                 </button>
