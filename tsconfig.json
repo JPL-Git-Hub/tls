@@ -22,6 +22,7 @@
     "paths": {
       "@/app/*": ["./src/app/*"],
       "@/components/*": ["./src/components/*"],
+      "@/catalyst/*": ["./src/catalyst/*"],
       "@/hooks/*": ["./src/hooks/*"],
       "@/lib/*": ["./src/lib/*"],
       "@/types/*": ["./src/types/*"]
