@@ -17,6 +17,7 @@ import {
   EllipsisVerticalIcon,
   EyeIcon,
   ArrowDownTrayIcon,
+  TrashIcon,
   PlusIcon,
   MagnifyingGlassIcon,
 } from '@heroicons/react/24/outline'
@@ -150,6 +151,42 @@ export default function DocumentsPage() {
       document.body.appendChild(link)
       link.click()
       document.body.removeChild(link)
+    }
+  }
+
+  const handleDeleteDocument = async (document: DocumentData) => {
+    if (!confirm(`Are you sure you want to delete "${document.fileName}"?`)) {
+      return
+    }
+
+    try {
+      const response = await fetch('/api/documents/delete', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ documentId: document.documentId }),
+      })
+
+      if (response.ok) {
+        // Refresh the document list
+        if (selectedCaseId) {
+          fetchDocuments(selectedCaseId)
+        }
+      } else {
+        const error = await response.json()
+        logClientError(
+          new Error(error.message || 'Failed to delete document'),
+          { documentId: document.documentId, operation: 'delete_document' }
+        )
+        alert('Failed to delete document')
+      }
+    } catch (error) {
+      logClientError(
+        error,
+        { documentId: document.documentId, operation: 'delete_document' }
+      )
+      alert('Failed to delete document')
     }
   }
 
@@ -320,6 +357,15 @@ export default function DocumentsPage() {
                                       >
                                         <ArrowDownTrayIcon className="h-4 w-4 mr-2" />
                                         Download
+                                      </button>
+                                    </MenuItem>
+                                    <MenuItem>
+                                      <button
+                                        onClick={() => handleDeleteDocument(document)}
+                                        className="flex items-center w-full px-4 py-2 text-sm text-red-700 hover:bg-red-50"
+                                      >
+                                        <TrashIcon className="h-4 w-4 mr-2" />
+                                        Delete
                                       </button>
                                     </MenuItem>
                                   </div>
