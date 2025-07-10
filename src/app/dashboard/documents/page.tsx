@@ -214,7 +214,7 @@ export default function DocumentsPage() {
             </div>
             <Button
               onClick={() => setIsUploadOpen(true)}
-              color="indigo"
+              color="primary"
             >
               <PlusIcon className="h-4 w-4 mr-2" />
               Upload Document
@@ -240,7 +240,7 @@ export default function DocumentsPage() {
                       <Button
                         key={caseData.caseId}
                         onClick={() => handleCaseSelect(caseData.caseId)}
-                        color={selectedCaseId === caseData.caseId ? 'indigo' : 'white'}
+                        color={selectedCaseId === caseData.caseId ? 'primary' : 'white'}
                         className="w-full text-left"
                       >
                         <div className="flex items-center">

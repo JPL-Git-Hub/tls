@@ -7,6 +7,7 @@ import { Text } from '@/catalyst/components/text'
 import { signInWithGoogle } from '@/lib/firebase/auth'
 import { useRouter } from 'next/navigation'
 import { logClientError } from '@/lib/client-error-logger'
+import { theme } from '@/catalyst/theme'
 
 export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false)
@@ -49,15 +50,16 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-8 bg-gray-50">
-      <div className="w-full max-w-md mx-auto bg-white rounded-xl shadow-sm ring-1 ring-gray-950/5 p-8">
-        <div className="text-center space-y-6">
+    <div className="mx-auto max-w-2xl px-4 py-16 sm:px-6 sm:py-24 lg:px-8">
+      <main className="flex min-h-full flex-col justify-center">
+        <div className="mx-auto w-full max-w-sm">
+          <div className="space-y-6">
           {/* Header */}
-          <div className="space-y-2">
-            <Heading level={2} className="text-2xl font-bold text-indigo-600">
+          <div className="text-center">
+            <Heading level={2} className="text-2xl font-bold">
               Attorney Login
             </Heading>
-            <Text className="text-gray-600">
+            <Text className="mt-2 text-sm text-gray-600">
               Sign in with your @thelawshop.com Google account
             </Text>
           </div>
@@ -73,11 +75,11 @@ export default function LoginPage() {
           </Button>
 
           {/* Footer */}
-          <Text className="text-sm text-gray-500">
+          <Text className="mt-4 text-center text-sm text-gray-500">
             Access the attorney dashboard and case management system
           </Text>
         </div>
-      </div>
+      </main>
     </div>
   )
 }

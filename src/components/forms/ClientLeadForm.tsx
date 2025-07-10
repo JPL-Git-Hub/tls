@@ -11,6 +11,7 @@ import { Heading } from '@/catalyst/components/heading'
 import { Text } from '@/catalyst/components/text'
 import { Input } from '@/catalyst/components/input'
 import { Field, Fieldset, FieldGroup, Label } from '@/catalyst/components/fieldset'
+import { theme } from '@/catalyst/theme'
 
 const clientLeadSchema = z.object({
   firstName: z.string().min(1, 'First name is required'),
@@ -73,13 +74,13 @@ export default function ClientLeadForm() {
 
   if (isSuccess) {
     return (
-      <div className="w-full max-w-md mx-auto bg-white rounded-xl shadow-sm ring-1 ring-gray-950/5 p-6">
+      <div className="mx-auto w-full max-w-sm">
         <div className="space-y-6">
-          <div className="text-center space-y-2">
-            <Heading level={2} className="text-xl font-semibold text-gray-900">
+          <div className="text-center">
+            <Heading level={2} className="text-xl font-semibold">
               Success!
             </Heading>
-            <Text className="text-gray-600">
+            <Text className="mt-2 text-sm text-gray-600">
               Your information has been submitted successfully
             </Text>
           </div>
@@ -103,13 +104,13 @@ export default function ClientLeadForm() {
   }
 
   return (
-    <div className="w-full max-w-md mx-auto bg-white rounded-xl shadow-sm ring-1 ring-gray-950/5 p-6">
+    <div className="mx-auto w-full max-w-sm">
       <div className="space-y-6">
-        <div className="text-center space-y-2">
-          <Heading level={2} className="text-xl font-semibold text-gray-900">
+        <div className="text-center">
+          <Heading level={2} className="text-xl font-semibold">
             Get Started
           </Heading>
-          <Text className="text-gray-600">
+          <Text className="mt-2 text-sm text-gray-600">
             Enter your details to begin
           </Text>
         </div>
@@ -187,7 +188,7 @@ export default function ClientLeadForm() {
 
               <Button 
                 type="submit" 
-                className="w-full mt-6" 
+                className="w-full" 
                 disabled={isLoading}
               >
                 {isLoading ? 'Submitting...' : 'Submit'}
